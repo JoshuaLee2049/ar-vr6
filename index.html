@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>文化智遊 - AI 科技儀表板（AR/VR整合版 v5 - Gemini抽取）</title>
+    <title>文化智遊 - AI 科技儀表板（RAG/AR/VR整合版 v5 - Gemini抽取）</title>
     <meta name="color-scheme" content="dark" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -98,13 +98,13 @@
         /* 地圖元件專屬樣式 */
         #local-map {
           height: 300px;
-          border: 1px solid var(--glass-border); 
+          border: 1px solid var(--glass-border);  
           border-radius: 12px;
           margin-bottom: .8rem;
         }
         .leaflet-container { /* 讓 Leaflet 容器適應暗色主題 */
-            background-color: var(--bg);
-            border-radius: 12px;
+             background-color: var(--bg);
+             border-radius: 12px;
         }
     </style>
     
@@ -416,486 +416,513 @@
                 h2_personal: 'Personal Center', p_personal: 'Your Cultural Footprint', card_fav: 'My Favorites', card_fav_p: '12 assets and 3 tours saved.', card_trip: 'My Trips', card_trip_p: '1 upcoming itinerary (Tainan 3-Day)', card_ach: 'My Achievements', card_ach_p: "Achieved: 'Fucheng Explorer' Badge",
                 modal_title: 'Import Custom Cultural Asset', modal_label_name: 'Asset Name (Required)', modal_label_location: 'Location / City (Required)', modal_label_type: 'Type (Monument/Museum/Intangible...)', modal_label_img: 'Image URL (Optional)', modal_label_desc: 'Brief Description (for RAG)', modal_h4_csv: 'OR: Batch Import CSV Data', btn_ai_summarize: '🤖 AI Auto Summarize (Simulated)', btn_cancel: 'Cancel', btn_submit: 'Import Single Asset', btn_import_csv: 'Import CSV Batch',
                 toast_lang_switched: (isZh) => `Language switched to ${isZh ? '繁體中文' : 'English'} (saved)`, toast_key_ok: 'Gemini API Key validated! Service core started.', toast_key_bad: 'Gemini API Key error or invalid.', toast_need_key: 'Please enter a valid Gemini Key in API settings first.', toast_import_error: 'Please fill Asset Name & Location.', toast_import_ok: (name) => `Imported: "${name}". Added to RAG source.`, toast_ai_summarizing: 'AI summarizing in progress...', toast_ai_summarize_ok: 'Summarization complete! Result filled into description.', toast_import_csv_error: 'CSV import failed. Check file and format (requires title, location columns).', toast_import_csv_ok: (count) => `Successfully imported ${count} assets. Added to RAG source.`, toast_network_error: 'Connection failed, please check network.', user_location: 'Your Current Location',
-                toast_fetching_ai: 'Activating Gemini AI to extract and structure cultural assets from web sources...',
-                toast_fetch_ok_ai: (count) => `✅ AI successfully extracted ${count} items. RAG knowledge base updated.`,
-                toast_fetch_error_ai: 'AI data fetching and extraction failed. Check Gemini Key or API limits.',
-            }
+                toast_fetching_ai: 'Starting Gemini AI to extract and structure cultural asset data from web sources...',
+                toast_fetch_ok_ai: (count) => `✅ Successfully extracted ${count} assets using AI. RAG knowledge base updated.`,
+                toast_fetch_error_ai: 'AI auto-fetching failed. Check Gemini Key or API limits.',
+            },
         };
 
-        // 應用程式狀態管理
-        const state = { 
-            lang: localStorage.getItem('lang') || 'zh-Hant', 
-            ragReady: localStorage.getItem('ragReady') === 'true', 
-            geminiKey: localStorage.getItem('geminiKey') || '', 
-            knowledge: [], 
-            filter: 'all', 
-            search: '',
-            isFetching: false,
-            watchID: null // 用於儲存 watchPosition ID
-        };
-
-        // 預設知識庫資料
-        const DEFAULT_KB = [
-            { id: '1', type: 'monument', title_zh: '赤崁樓', info_zh: '台南市 / 一級古蹟', title_en: 'Chikan Tower', info_en: 'Tainan / Grade 1 Monument', img_url: 'https://via.placeholder.com/640x360/222233/aaaaaa?text=Chikan+Tower', desc: '赤崁樓始建於 1653 年，為荷蘭人所建，歷經清朝重建與日治時期修繕，是台南最具代表性的古蹟之一。' },
-            { id: '2', type: 'museum', title_zh: '西門紅樓', info_zh: '台北市 / 歷史建築', title_en: 'Ximen Red House', info_en: 'Taipei / Historical Building', img_url: 'https://via.placeholder.com/640x360/222233/aaaaaa?text=Red+House', desc: '西門紅樓是一座兩層高的紅磚洋樓，見證了西門町的歷史發展。' },
-            { id: '3', type: 'intangible', title_zh: '媽祖繞境', info_zh: '中台灣 / 無形文化', title_en: 'Mazu Pilgrimage', info_en: 'Central Taiwan / Intangible Heritage', img_url: 'https://via.placeholder.com/640x360/222233/aaaaaa?text=Mazu+Pilgrimage', desc: '中元普渡民俗與宗教文化的代表活動之一，強調對先人敬意與社群連結。' }
+        // ----------------------------------------------------------------------
+        // *** 2. 模擬 RAG 知識庫數據 (RAG Knowledge Base Simulation) ***
+        // ----------------------------------------------------------------------
+        /**
+         * 模擬 RAG 核心知識庫。實際部署時，此處會替換為向量資料庫的檢索結果。
+         * 格式：{ id, title, location, type, description }
+         */
+        let ragKnowledgeBase = [
+            { id: 'twn001', title: '臺南神農街舊宅群', location: '臺南市中西區', type: 'monument', description: '神農街是臺南保存較完整的古老街道之一，昔稱北勢街。清朝時期是五條港區域重要的商業與船運要道。其建築多為兩層樓，有「半樓仔」構造，見證了臺灣早期繁榮的商業歷史。最近剛完成修復並重新開放，強調其歷史重要性。', imgUrl: 'https://via.placeholder.com/300x180/8B4513/FFFFFF?text=Shennong+Street' },
+            { id: 'twn002', title: '國立故宮博物院', location: '臺北市士林區', type: 'museum', description: '故宮博物院收藏了近七十萬件中華文化文物，是世界著名的博物館之一。其中包含青銅器、瓷器、玉器、書畫等。2025 年將推出宋代繪畫的 4K 數位沉浸式體驗，極具數位教育價值。', imgUrl: 'https://via.placeholder.com/300x180/4682B4/FFFFFF?text=National+Palace+Museum' },
+            { id: 'twn003', title: '東港迎王平安祭典', location: '屏東縣東港鎮', type: 'intangible', description: '東港迎王是臺灣重要的無形文化資產，主要在三年一科舉行。祭典包含請王、遶境、宴王、送王等儀式，具有高度的宗教與地方文化意義。已被列為文化觀光推廣重點。', imgUrl: 'https://via.placeholder.com/300x180/B0C4DE/000000?text=Donggang+Ritual' },
         ];
-        
-        // Gemini 結構化輸出的 JSON Schema
-        const CULTURAL_ASSET_SCHEMA = {
-            type: "array",
-            items: {
-                type: "object",
-                properties: {
-                    title_zh: { type: "string", description: "文化資產的中文名稱" },
-                    info_zh: { type: "string", description: "簡要地點/分類資訊" },
-                    type: { type: "string", description: "類別，固定為 monument, museum, 或 intangible" },
-                    desc: { type: "string", description: "從新聞摘要中提取的簡短描述" }
-                },
-                required: ["title_zh", "info_zh", "type", "desc"]
+
+
+        // ----------------------------------------------------------------------
+        // *** 3. AI 核心邏輯函式與主程序 (AI Core Logic & Main Flow) ***
+        // ----------------------------------------------------------------------
+
+        const AI_GUIDE_MODEL = 'gemini-2.5-flash'; // 模擬使用的模型名稱
+        let isRagConnected = false;
+        let currentLanguage = localStorage.getItem('appLang') || 'zh-Hant';
+
+
+        /**
+         * 執行 AI 智能導覽問答的核心函式。
+         * @param {string} userMessage - 使用者輸入的訊息。
+         * @returns {Promise<string>} - AI 回答。
+         */
+        async function getAIResponse(userMessage) {
+            if (!isRagConnected) {
+                return i18n[currentLanguage].chat_init;
             }
-        };
-
-        // DOM 元素快取
-        const elements = {
-            kbGrid: $('#kb-grid'),
-            ragDot: $('#rag-dot'),
-            ragText: $('#rag-text'),
-            geminiApiInput: $('#gemini-api'),
-            btnSaveApi: $('#btn-save-api'),
-            btnAutoFetch: $('#btn-auto-fetch'),
-            filterControls: $('#filter-controls'),
-            kbSearch: $('#kb-search'),
-            chat: $('#chat'),
-            chatInput: $('#chat-input'),
-            btnSend: $('#btn-send'),
-            localDataList: $('#local-data-list'),
-            importModal: $('#import-modal'),
-            btnImport: $('#btn-import'),
-            importForm: $('#import-form'),
-            assetName: $('#asset-name'),
-            assetLocation: $('#asset-location'),
-            assetType: $('#asset-type'),
-            assetImgUrl: $('#asset-img-url'),
-            assetDesc: $('#asset-desc'),
-            toast: $('#toast')
-        };
-
-
-        // --- UI / 國際化功能 ---
-
-        function t(key, ...args) {
-            let text = i18n[state.lang][key];
-            if (typeof text === 'function') {
-                return text(...args);
-            }
-            return text || key;
-        }
-
-        function switchLanguage(lang) {
-            state.lang = lang;
-            localStorage.setItem('lang', lang);
-            document.documentElement.lang = lang;
             
-            // 更新所有帶有 data-key 的元素
-            $$('[data-key]').forEach(el => {
-                const key = el.dataset.key;
-                if (i18n[lang][key] && typeof i18n[lang][key] !== 'function') {
-                    if (el.tagName === 'INPUT' && el.placeholder) {
-                        el.placeholder = t(key);
-                    } else {
-                        el.textContent = t(key);
-                    }
+            // 1. 檢索本地 RAG 知識庫 (Simulated RAG Lookup)
+            let ragResult = findRelevantKnowledge(userMessage);
+            
+            // 2. 判斷是否需要使用外部工具 (Google Search Tool)
+            let isNeedSearch = shouldCallTool(userMessage);
+            
+            let context = `使用者問題：${userMessage}\n\n`;
+            let toolResult = '';
+            
+            if (ragResult) {
+                context += `[本地知識庫資料：${ragResult.title}]\n描述：${ragResult.description}\n`;
+            }
+
+            if (isNeedSearch) {
+                const query = userMessage.includes('最新') || userMessage.includes('新聞') ? userMessage : `台灣文化資產 ${userMessage}`;
+                try {
+                    const searchResults = await google.search({ queries: [query] });
+                    toolResult = searchResults.results.map(r => `來源：${r.source_title}\n摘要：${r.snippet}\n網址：${r.url}`).join('\n---\n');
+                    context += `[Google 搜尋結果]\n${toolResult}\n`;
+                } catch (error) {
+                    console.error('Google Search Tool 模擬失敗:', error);
+                    // 即使模擬失敗，仍繼續用現有 context 讓 AI 回答
                 }
-            });
-
-            // 特別處理 chat init message
-            const chatInit = $('.bubble.ai');
-            if(chatInit) chatInit.textContent = t('chat_init');
-
-            // 重新渲染知識庫
-            renderKB();
-
-            showToast(t('toast_lang_switched', lang === 'zh-Hant'), 'success');
-        }
-
-        function showToast(message, type = 'default') {
-            elements.toast.textContent = message;
-            elements.toast.className = `toast show ${type}`;
-            setTimeout(() => {
-                elements.toast.classList.remove('show');
-            }, 3000);
-        }
-
-        function updateRagStatus() {
-            elements.ragDot.classList.toggle('ok', state.ragReady);
-            elements.ragText.textContent = state.ragReady ? t('status_rag').replace('尚未連線', '已連線') : t('status_rag');
-            elements.btnSend.disabled = !state.ragReady;
-        }
-
-
-        // --- 知識庫 / 渲染功能 ---
-
-        function renderKB() {
-            elements.kbGrid.innerHTML = ''; // 清空
-            const currentLang = state.lang === 'zh-Hant' ? 'zh' : 'en';
-
-            const filteredKnowledge = state.knowledge.filter(item => {
-                const titleKey = `title_${currentLang}`;
-                const infoKey = `info_${currentLang}`;
-
-                // 篩選：類型
-                const typeMatch = state.filter === 'all' || item.type === state.filter;
-
-                // 篩選：搜尋
-                const searchMatch = !state.search || 
-                                    item[titleKey].toLowerCase().includes(state.search.toLowerCase()) || 
-                                    item[infoKey].toLowerCase().includes(state.search.toLowerCase()) ||
-                                    (item.desc && item.desc.toLowerCase().includes(state.search.toLowerCase()));
-                
-                return typeMatch && searchMatch;
-            });
-
-
-            if (filteredKnowledge.length === 0) {
-                 elements.kbGrid.innerHTML = `<p style="grid-column: span 3; text-align: center; color: var(--muted);">
-                                                 ${t('placeholder_search').replace('...', '...找不到資料。')}
-                                             </p>`;
-                return;
             }
 
-
-            filteredKnowledge.forEach(item => {
-                const template = $('#kb-card-tpl').content.cloneNode(true);
-                const card = template.querySelector('.kb-card');
-                
-                const img = card.querySelector('img');
-                const title = card.querySelector('.title');
-                const meta = card.querySelector('.meta');
-
-                card.dataset.id = item.id;
-                card.dataset.type = item.type;
-                
-                img.src = item.img_url || `https://via.placeholder.com/640x360/333344/aaaaaa?text=${item[`title_${currentLang}`]}`;
-                img.alt = item[`title_${currentLang}`];
-                title.textContent = item[`title_${currentLang}`];
-                meta.textContent = item[`info_${currentLang}`];
-
-                elements.kbGrid.appendChild(template);
-            });
-        }
-
-
-        // --- 核心功能：AI 自動爬取並抽取資料 ---
-
-        async function fetchCulturalAssets() {
-            if (state.isFetching) return;
-
-            state.isFetching = true;
-            elements.btnAutoFetch.disabled = true;
-            elements.btnAutoFetch.textContent = '⚙️ 處理中...';
-            showToast(t('toast_fetching_ai'), 'default');
+            // 3. 模擬 Gemini 模型生成回答
+            // 實際部署時，這裡會替換為：
+            // const response = await gemini.generateContent({ model: AI_GUIDE_MODEL, contents: [{ role: 'user', parts: [{ text: context }] }] });
             
-            let searchResults = '';
-            let extractedData = null;
-
-            try {
-                // 步驟 1: 呼叫 Google Search Tool 進行搜尋 (模擬)
-                const searchResponse = await google.search({ 
-                    queries: [
-                        state.lang === 'zh-Hant' ? "台灣最新文化資產與古蹟新聞" : "Taiwan latest cultural asset news", 
-                        state.lang === 'zh-Hant' ? "文化觀光活動資訊" : "Cultural tourism event information"
-                    ] 
-                });
-
-                // 將搜尋結果格式化成單一字串，以便傳遞給 Gemini (模擬)
-                searchResults = searchResponse.results.map(r => 
-                    `標題: ${r.source_title}\n摘要: ${r.snippet}\n網址: ${r.url}`
-                ).join('\n\n---\n\n');
-
-                
-                // 步驟 2: 呼叫 Gemini API 進行結構化抽取 (此處僅為**模擬成功**回覆)
-                
-                // 模擬網路延遲和 AI 處理時間
-                await new Promise(resolve => setTimeout(resolve, 3000));
-                
-                // 模擬 Gemini 結構化輸出
-                extractedData = [
-                    { id: Date.now() + '-1', type: 'monument', title_zh: "臺南神農街舊宅群", info_zh: "臺南市 / 國定古蹟", title_en: "Tainan Shennong St. Houses", info_en: "Tainan / National Monument", img_url: 'https://via.placeholder.com/640x360/443322/aaaaaa?text=Shennong+Street', desc: "文化部宣布最新修復竣工，強調其對臺灣早期商業歷史的重要性。" },
-                    { id: Date.now() + '-2', type: 'intangible', title_zh: "東港迎王平安祭典", info_zh: "屏東縣 / 無形文化", title_en: "Donggang Wangye Festival", info_en: "Pingtung / Intangible Heritage", img_url: 'https://via.placeholder.com/640x360/552233/aaaaaa?text=Wangye+Festival', desc: "列為今年文化觀光推廣重點，交通部觀光署提供詳細指引。" },
-                    { id: Date.now() + '-3', type: 'monument', title_zh: "鳳山遺址", info_zh: "高雄市 / 暫定歷史遺址", title_en: "Fengshan Historical Site", info_en: "Kaohsiung / Provisional Historic Site", img_url: 'https://via.placeholder.com/640x360/225544/aaaaaa?text=Fengshan+Site', desc: "高雄鳳山發現清朝早期軍事防禦工事的遺跡，將進行進一步研究與保護。" }
-                ];
-                
-                // 步驟 3: 更新知識庫
-                if (Array.isArray(extractedData) && extractedData.length > 0) {
-                    const existingTitles = new Set(state.knowledge.map(item => item.title_zh));
-                    const newAssets = extractedData.filter(item => !existingTitles.has(item.title_zh));
-                    
-                    state.knowledge = [...state.knowledge, ...newAssets];
-                    renderKB();
-                    showToast(t('toast_fetch_ok_ai', newAssets.length), 'success');
+            // 模擬 AI 根據 context 生成的回答
+            let aiResponse = "";
+            if (ragResult || toolResult) {
+                // AI 根據 RAG 或 Search 結果生成回答
+                if (ragResult && userMessage.includes(ragResult.title.substring(0, 3))) {
+                     aiResponse = `根據我們的文化知識庫，您提到的「${ragResult.title}」位於 ${ragResult.location}，是一處重要的 ${ragResult.type === 'monument' ? '古蹟' : ragResult.type === 'museum' ? '博物館' : '文化資產'}。它被描述為：${ragResult.description.substring(0, 50)}...。想了解更多細節嗎？`;
+                } else if (toolResult) {
+                     aiResponse = `我為您檢索了最新的資訊。結果顯示：\n\n${toolResult.split('\n---\n')[0]}\n\n完整資訊請參考資訊來源。`;
                 } else {
-                    // 雖然模擬是成功的，但為了完整性，保留錯誤處理
-                    showToast(t('toast_fetch_error_ai') + ' (Gemini 抽取結果為空)', 'error');
+                     aiResponse = "這是一個關於臺灣文化資產的複雜問題。雖然我們已檢索了部分資料，但 AI 正在努力組織更完善的答案。請重新提問更具體的內容！";
                 }
-
-            } catch (error) {
-                console.error("AI 自動爬取失敗:", error);
-                showToast(t('toast_fetch_error_ai'), 'error');
-            } finally {
-                state.isFetching = false;
-                elements.btnAutoFetch.disabled = false;
-                elements.btnAutoFetch.textContent = t('btn_auto_fetch');
-            }
-        }
-
-
-        // --- 地圖與 GPS 功能 ---
-
-        let localMap;
-        let userMarker;
-        let mapInitialized = false;
-
-        function initMap(lat, lng) {
-            if (!mapInitialized && $('#local-map')) {
-                // 初始化地圖，中心點為使用者的位置或預設的台南赤崁樓
-                const centerCoords = [lat || 22.9972, lng || 120.2036];
-                localMap = L.map('local-map').setView(centerCoords, 16); 
-
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors',
-                    maxZoom: 18,
-                }).addTo(localMap);
-
-                userMarker = L.marker(centerCoords, {
-                    icon: L.divIcon({className: 'user-marker', html: '📍'})
-                }).addTo(localMap)
-                  .bindPopup(t('user_location')).openPopup();
-
-                mapInitialized = true;
-                
-                // 模擬在地即時資訊列表
-                updateLocalDataList(lat, lng);
-            }
-        }
-
-        function updateLocalDataList(lat, lng) {
-            const list = elements.localDataList;
-            list.innerHTML = '';
-            
-            // 模擬的 GPS 資訊 (基於赤崁樓中心點)
-            const simulatedData = [
-                { type: 'asset', icon: '🏛️', name: '赤崁樓 (一級古蹟)', distance: '0 m' },
-                { type: 'asset', icon: '📚', name: '台灣文學館 (國定古蹟)', distance: '270 m' },
-                { type: 'bus', icon: '🚌', name: t('bus_route'), distance: t('bus_status') },
-                { type: 'event', icon: '🎉', name: t('event_name'), distance: t('event_status') }
-            ];
-
-            simulatedData.forEach(item => {
-                const li = document.createElement('li');
-                li.style.cssText = 'padding: 8px 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dotted var(--glass-border);';
-                li.innerHTML = `
-                    <span>${item.icon} ${item.name}</span>
-                    <span style="font-weight: bold; color: var(--pri);">${item.distance}</span>
-                `;
-                list.appendChild(li);
-            });
-        }
-
-        function handleGeolocationSuccess(pos) {
-            const lat = pos.coords.latitude;
-            const lng = pos.coords.longitude;
-
-            if (!mapInitialized) {
-                initMap(lat, lng);
-            }
-
-            // 更新地圖標記和視圖
-            userMarker.setLatLng([lat, lng]);
-            localMap.setView([lat, lng], 16); 
-            updateLocalDataList(lat, lng);
-
-            console.log(`GPS Location: ${lat}, ${lng}`);
-        }
-
-        function handleGeolocationError(err) {
-            console.warn(`GPS 錯誤 (${err.code}): ${err.message}`);
-            // 如果失敗，使用預設座標初始化地圖
-            initMap(); 
-        }
-
-        function setupGeolocation() {
-            if (navigator.geolocation) {
-                // 啟動 GPS 追蹤
-                state.watchID = navigator.geolocation.watchPosition(
-                    handleGeolocationSuccess, 
-                    handleGeolocationError, 
-                    { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
-                );
             } else {
-                handleGeolocationError({ code: 0, message: '瀏覽器不支援地理定位' });
+                // AI 找不到相關資訊，或問題太通用
+                aiResponse = `抱歉，我目前的知識庫和即時資訊源中，還沒有關於「${userMessage}」的直接答案。我是一個專注於臺灣文化與 AR/VR 體驗的 AI 導覽助手，請問您想了解臺灣的古蹟、博物館或沉浸式體驗嗎？`;
             }
+
+            // 模擬延遲
+            await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1000));
+            
+            return aiResponse;
         }
 
-        // --- 事件綁定與初始化 ---
+        /**
+         * 輔助函式：模擬判斷是否需要呼叫外部工具 (Function Calling)。
+         * 實際 AI 模型會自動決定。這裡使用關鍵字模擬。
+         */
+        function shouldCallTool(message) {
+            const keywords = ['最新', '新聞', '最近公告', '活動日期', '開放時間'];
+            return keywords.some(keyword => message.includes(keyword));
+        }
 
-        function setupEventListeners() {
-            // 語言切換
-            $('#btn-zh').addEventListener('click', () => switchLanguage('zh-Hant'));
-            $('#btn-en').addEventListener('click', () => switchLanguage('en'));
+        /**
+         * 輔助函式：模擬從本地知識庫中找到相關資料。
+         */
+        function findRelevantKnowledge(message) {
+            const lowerMsg = message.toLowerCase();
+            return ragKnowledgeBase.find(item => 
+                lowerMsg.includes(item.title.toLowerCase().substring(0, 3)) || 
+                lowerMsg.includes(item.location.toLowerCase().substring(0, 2)) ||
+                lowerMsg.includes(item.type)
+            );
+        }
 
-            // API 儲存 (模擬)
-            elements.btnSaveApi.addEventListener('click', () => {
-                const key = elements.geminiApiInput.value.trim();
-                if (key.length > 10) { // 簡單驗證長度
-                    state.geminiKey = key;
-                    state.ragReady = true;
-                    localStorage.setItem('geminiKey', key);
-                    localStorage.setItem('ragReady', 'true');
-                    updateRagStatus();
-                    showToast(t('toast_key_ok'), 'success');
-                } else {
-                    state.ragReady = false;
-                    updateRagStatus();
-                    showToast(t('toast_key_bad'), 'error');
-                }
-            });
+        // ----------------------------------------------------------------------
+        // *** 4. UI 互動與事件監聽 (UI Interactions and Event Listeners) ***
+        // ----------------------------------------------------------------------
 
-            // KB 自動爬取
-            elements.btnAutoFetch.addEventListener('click', fetchCulturalAssets);
+        document.addEventListener('DOMContentLoaded', () => {
+            // 確保所有 DOM 元素已載入
+            const chatWindow = $('#chat');
+            const chatInput = $('#chat-input');
+            const btnSend = $('#btn-send');
+            const geminiApiInput = $('#gemini-api');
+            const btnSaveApi = $('#btn-save-api');
+            const ragDot = $('#rag-dot');
+            const ragText = $('#rag-text');
 
-            // KB 篩選
-            elements.filterControls.addEventListener('click', (e) => {
-                if (e.target.classList.contains('filter')) {
-                    $$('.filter').forEach(btn => btn.classList.remove('active'));
-                    e.target.classList.add('active');
-                    state.filter = e.target.dataset.filter;
-                    renderKB();
-                }
-            });
-
-            // KB 搜尋
-            elements.kbSearch.addEventListener('input', (e) => {
-                state.search = e.target.value;
-                renderKB();
-            });
-            
-            // 聊天發送 (模擬)
-            elements.btnSend.addEventListener('click', (e) => {
-                const message = elements.chatInput.value.trim();
-                if (message) {
-                    // 模擬使用者泡泡
-                    const userBubble = document.createElement('div');
-                    userBubble.className = 'bubble user';
-                    userBubble.textContent = message;
-                    elements.chat.appendChild(userBubble);
-                    
-                    // 模擬 AI 回覆
-                    setTimeout(() => {
-                        const aiBubble = document.createElement('div');
-                        aiBubble.className = 'bubble ai';
-                        aiBubble.textContent = `🤖 AI 模擬回覆: 收到您的問題 "${message}"。根據知識庫，...`;
-                        elements.chat.appendChild(aiBubble);
-                        elements.chat.scrollTop = elements.chat.scrollHeight;
-                    }, 1500);
-
-                    elements.chatInput.value = '';
-                    elements.chat.scrollTop = elements.chat.scrollHeight;
-                }
-            });
-            
-            // 摺疊功能 (GPS & USR)
-            $$('.collapsible').forEach(toggle => {
-                toggle.addEventListener('click', () => {
-                    const body = toggle.nextElementSibling;
-                    const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
-                    toggle.setAttribute('aria-expanded', !isExpanded);
-                    body.hidden = isExpanded;
+            // 載入知識庫卡片 (KB Cards) 的函式
+            function loadKBCards(data) {
+                const kbGrid = $('#kb-grid');
+                const tpl = $('#kb-card-tpl');
+                kbGrid.innerHTML = '';
+                data.forEach(item => {
+                    const clone = tpl.content.cloneNode(true);
+                    const article = clone.querySelector('.kb-card');
+                    article.dataset.id = item.id;
+                    article.dataset.filter = item.type;
+                    clone.querySelector('.title').textContent = item.title;
+                    clone.querySelector('.meta').textContent = `${item.location} | ${item.type === 'monument' ? i18n[currentLanguage].filter_monument : item.type === 'museum' ? i18n[currentLanguage].filter_museum : item.type === 'intangible' ? i18n[currentLanguage].filter_intangible : '自定義'}`;
+                    clone.querySelector('img').src = item.imgUrl || 'https://via.placeholder.com/300x180/0d1323/8090a0?text=Culture+Asset';
+                    clone.querySelector('img').alt = item.title;
+                    kbGrid.appendChild(clone);
                 });
+            }
+
+            // 將模擬資料庫初始載入到 UI 上
+            loadKBCards(ragKnowledgeBase);
+
+            /**
+             * 發送訊息並處理回應
+             */
+            async function handleSendMessage() {
+                const userMessage = chatInput.value.trim();
+                if (userMessage === '') return;
+
+                // 1. 顯示使用者氣泡
+                appendMessage(userMessage, 'user');
+                chatInput.value = '';
+                btnSend.disabled = true;
+
+                // 2. 顯示 AI 思考中 (Loading) 氣泡
+                const loadingBubble = appendMessage('...', 'ai');
+                
+                try {
+                    // 3. 呼叫 AI 核心
+                    const aiResponse = await getAIResponse(userMessage);
+                    
+                    // 4. 更新 AI 氣泡
+                    loadingBubble.textContent = aiResponse;
+                    
+                } catch (error) {
+                    loadingBubble.textContent = i18n[currentLanguage].toast_network_error;
+                    console.error("Chat Error:", error);
+                } finally {
+                    btnSend.disabled = false;
+                    // 確保捲動到最新訊息
+                    chatWindow.scrollTop = chatWindow.scrollHeight;
+                }
+            }
+            
+            /**
+             * 輔助函式：新增聊天氣泡到聊天視窗
+             */
+            function appendMessage(text, type) {
+                const bubble = document.createElement('div');
+                bubble.className = `bubble ${type}`;
+                bubble.textContent = text;
+                chatWindow.appendChild(bubble);
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+                return bubble;
+            }
+
+            // ------------------- 事件監聽器 -------------------
+
+            // 點擊發送按鈕
+            btnSend.addEventListener('click', handleSendMessage);
+            
+            // 鍵盤 Enter 發送訊息
+            chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSendMessage();
+                }
             });
 
-            // AR 熱點註釋互動 (Model-Viewer)
-            const mvAnping = $('#mv-anping');
-            if(mvAnping) {
-                mvAnping.addEventListener('load', () => {
-                    $$('.hotspot', mvAnping).forEach(hotspot => {
-                        const annotation = mvAnping.querySelector(`.annotation[slot="annotation-${hotspot.dataset.slot.replace('hotspot-', '')}"]`);
+            // 儲存 API Key
+            btnSaveApi.addEventListener('click', () => {
+                const key = geminiApiInput.value.trim();
+                if (key && key.length > 30) { // 模擬一個簡單的 Key 格式檢查
+                    localStorage.setItem('geminiApiKey', key);
+                    isRagConnected = true;
+                    ragDot.className = 'dot ok';
+                    ragText.textContent = i18n[currentLanguage].status_rag.replace('尚未連線', '已連線');
+                    // 移除初始訊息
+                    const initBubble = chatWindow.querySelector('[data-key="chat_init"]');
+                    if(initBubble) initBubble.remove();
+
+                    // 顯示成功提示
+                    showToast(i18n[currentLanguage].toast_key_ok, 'success');
+                } else {
+                    isRagConnected = false;
+                    ragDot.className = 'dot';
+                    ragText.textContent = i18n[currentLanguage].status_rag;
+                    showToast(i18n[currentLanguage].toast_key_bad, 'error');
+                }
+            });
+
+            // 檢查 API Key 狀態 (初始化時執行)
+            if (localStorage.getItem('geminiApiKey')) {
+                geminiApiInput.value = '*************************'; // 不顯示實際 Key
+                btnSaveApi.click(); // 模擬點擊來驗證狀態
+            }
+
+
+            // ------------------- 知識庫篩選 (Filter) -------------------
+            $('#filter-controls').addEventListener('click', (e) => {
+                const target = e.target;
+                if (target.classList.contains('filter')) {
+                    $$('.filter').forEach(btn => btn.classList.remove('active'));
+                    target.classList.add('active');
+                    
+                    const filterType = target.dataset.filter;
+                    $$('.kb-card').forEach(card => {
+                        if (filterType === 'all' || card.dataset.filter === filterType) {
+                            card.style.display = 'block';
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+                }
+            });
+
+            // ------------------- AI 自動爬取資料 (Simulated AI Fetch) -------------------
+            $('#btn-auto-fetch').addEventListener('click', async () => {
+                if (!isRagConnected) {
+                    return showToast(i18n[currentLanguage].toast_need_key, 'error');
+                }
+                
+                showToast(i18n[currentLanguage].toast_fetching_ai, 'success');
+                
+                try {
+                    // 模擬呼叫 Gemini AI + Google Search Tool 來抽取網路資料
+                    const searchResults = await google.search({ queries: ['台灣最新文化資產公告'] });
+                    
+                    let newAssetsCount = 0;
+                    searchResults.results.forEach((res, index) => {
+                        // 模擬 AI 從摘要中結構化資訊
+                        const titleMatch = res.snippet.match(/(臺南神農街舊宅群|國立故宮博物院|東港迎王平安祭典|高雄鳳山遺址)/);
                         
-                        hotspot.addEventListener('mouseenter', () => {
-                            if (annotation) annotation.style.display = 'block';
-                        });
-                        hotspot.addEventListener('mouseleave', () => {
-                            if (annotation) annotation.style.display = 'none';
-                        });
+                        // 檢查是否已存在，這裡我們僅模擬新增「高雄鳳山遺址」作為新的資料，避免重複
+                        if (titleMatch && titleMatch[0].includes('鳳山') && !ragKnowledgeBase.some(item => item.title.includes('鳳山'))) {
+                            const newAsset = {
+                                id: `ai${Date.now() + index}`,
+                                title: titleMatch[0],
+                                location: '高雄市鳳山區',
+                                type: 'monument',
+                                description: res.snippet,
+                                imgUrl: `https://via.placeholder.com/300x180/4d1111/999999?text=AI+Fetched+${++newAssetsCount}`
+                            };
+                            ragKnowledgeBase.push(newAsset);
+                        }
+                    });
+                    
+                    loadKBCards(ragKnowledgeBase); // 重新載入知識庫卡片
+                    showToast(i18n[currentLanguage].toast_fetch_ok_ai(newAssetsCount), 'success');
+
+                } catch (error) {
+                    console.error('AI Auto Fetch Error:', error);
+                    showToast(i18n[currentLanguage].toast_fetch_error_ai, 'error');
+                }
+            });
+
+
+            // ------------------- 模態框 / 彈窗控制 -------------------
+            const importModal = $('#import-modal');
+            const btnImport = $('#btn-import');
+            const btnCloseModal = $('#btn-close-modal');
+            const btnCancel = $('#btn-cancel');
+            const btnSubmit = $('#btn-submit');
+            const btnAiSummarize = $('#btn-ai-summarize');
+
+            btnImport.addEventListener('click', () => {
+                if (!isRagConnected) {
+                    return showToast(i18n[currentLanguage].toast_need_key, 'error');
+                }
+                importModal.showModal();
+            });
+            
+            [btnCloseModal, btnCancel].forEach(btn => {
+                btn.addEventListener('click', () => importModal.close());
+            });
+            
+            // 單筆匯入邏輯
+            $('#import-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const name = $('#asset-name').value.trim();
+                const location = $('#asset-location').value.trim();
+                const type = $('#asset-type').value.trim() || 'custom';
+                const imgUrl = $('#asset-img-url').value.trim();
+                const desc = $('#asset-desc').value.trim();
+
+                if (name === '' || location === '') {
+                    return showToast(i18n[currentLanguage].toast_import_error, 'error');
+                }
+
+                const newAsset = {
+                    id: `usr${Date.now()}`,
+                    title: name,
+                    location: location,
+                    type: type.toLowerCase().replace(/[^a-z0-9]/g, ''), // 簡化類型為 filter 用
+                    description: desc,
+                    imgUrl: imgUrl
+                };
+
+                ragKnowledgeBase.push(newAsset);
+                loadKBCards(ragKnowledgeBase); // 重新載入知識庫卡片
+
+                importModal.close();
+                showToast(i18n[currentLanguage].toast_import_ok(name), 'success');
+                $('#asset-name').value = ''; // 清空欄位
+                $('#asset-location').value = '';
+                $('#asset-type').value = '';
+                $('#asset-img-url').value = '';
+                $('#asset-desc').value = '';
+            });
+
+            // 模擬 AI 自動摘要
+            btnAiSummarize.addEventListener('click', async () => {
+                const descInput = $('#asset-desc');
+                const originalText = descInput.value.trim();
+                
+                if (originalText.length < 50) {
+                    descInput.value = '請輸入足夠長的文本（例如一段維基百科介紹）讓 AI 進行摘要。';
+                    return;
+                }
+
+                showToast(i18n[currentLanguage].toast_ai_summarizing, 'success');
+                btnAiSummarize.disabled = true;
+
+                // 模擬 AI 呼叫延遲和摘要邏輯
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // 模擬摘要結果
+                const simulatedSummary = originalText.substring(0, 50) + '... (AI 摘要結果: 精煉了核心概念與歷史背景)';
+                
+                descInput.value = simulatedSummary;
+                btnAiSummarize.disabled = false;
+                showToast(i18n[currentLanguage].toast_ai_summarize_ok, 'success');
+            });
+
+
+            // ------------------- i18n 語言切換 (部分簡化) -------------------
+            function updateLanguage(lang) {
+                currentLanguage = lang;
+                localStorage.setItem('appLang', lang);
+                document.documentElement.lang = lang;
+
+                $$('[data-key]').forEach(el => {
+                    const key = el.dataset.key;
+                    if (i18n[lang] && i18n[lang][key] !== undefined) {
+                        el.textContent = i18n[lang][key];
+                    }
+                });
+
+                // 特別更新動態內容
+                if (isRagConnected) {
+                    ragText.textContent = i18n[currentLanguage].status_rag.replace('尚未連線', '已連線');
+                }
+
+                showToast(i18n[lang].toast_lang_switched(lang === 'zh-Hant'), 'success');
+                // 重新載入知識庫卡片以更新內部文字
+                loadKBCards(ragKnowledgeBase);
+            }
+
+            $('#btn-zh').addEventListener('click', () => updateLanguage('zh-Hant'));
+            $('#btn-en').addEventListener('click', () => updateLanguage('en'));
+
+            // 初始化時檢查本地儲存的語言設定
+            if (localStorage.getItem('appLang')) {
+                // 必須等待 DOMContentLoaded 後再執行，否則 i18n 元素可能還沒加載
+                updateLanguage(localStorage.getItem('appLang'));
+            }
+
+            // ------------------- Toast 提示函式 -------------------
+            function showToast(message, type = 'default') {
+                const toast = $('#toast');
+                toast.textContent = message;
+                toast.className = `toast show ${type}`;
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+            }
+
+            // ------------------- Leaflet 地圖初始化 -------------------
+            const localMap = $('#local-map');
+            if (localMap && typeof L !== 'undefined') {
+                let map;
+                
+                 map = L.map('local-map', {
+                    center: [23.5, 121], // 臺灣中心點
+                    zoom: 8,
+                    zoomControl: false, // 移除預設縮放控制
+                    scrollWheelZoom: false // 禁用滾輪縮放
+                });
+
+                // 使用 CartoDB Dark Matter 作為底圖
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                    subdomains: 'abcd',
+                    maxZoom: 19
+                }).addTo(map);
+
+                // 模擬使用者位置
+                const userLat = 22.9904; // 臺南赤崁樓附近
+                const userLng = 120.2084;
+
+                L.marker([userLat, userLng]).addTo(map)
+                    .bindPopup(`<b style="color:var(--pri)">${i18n[currentLanguage].user_location}</b>`).openPopup();
+
+                map.setView([userLat, userLng], 14); // 定位到使用者位置
+
+                // 模擬在地資料
+                const localData = [
+                    { lat: 22.9972, lng: 120.2016, name: i18n[currentLanguage].bus_route, desc: i18n[currentLanguage].bus_status, color: 'var(--sec)' },
+                    { lat: 22.9881, lng: 120.2078, name: i18n[currentLanguage].event_name, desc: i18n[currentLanguage].event_status, color: 'var(--ok)' }
+                ];
+
+                const listEl = $('#local-data-list');
+                listEl.innerHTML = '';
+                
+                localData.forEach(item => {
+                    L.circleMarker([item.lat, item.lng], { radius: 6, fillColor: item.color, color: '#fff', weight: 1, opacity: 1, fillOpacity: 0.8 }).addTo(map)
+                        .bindPopup(`<b>${item.name}</b><br>${item.desc}`);
+                    
+                    const li = document.createElement('li');
+                    li.innerHTML = `<div style="display:flex; align-items:center; gap:.6rem"><span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:${item.color}"></span><div><h4 style="margin:0; font-size:1rem">${item.name}</h4><p style="margin:0; color:var(--muted); font-size:.9rem">${item.desc}</p></div></div>`;
+                    listEl.appendChild(li);
+                });
+                
+            } else if (localMap) {
+                console.error("Leaflet library not loaded, map initialization skipped.");
+            }
+
+
+            // ------------------- AR/VR 互動 (Hotspot Annotation) -------------------
+            const mvAnping = $('#mv-anping');
+            if (mvAnping) {
+                mvAnping.addEventListener('load', () => {
+                    mvAnping.querySelectorAll('.hotspot').forEach(hotspot => {
+                        const annotationText = hotspot.dataset.anno;
+                        // 根據 data-position 屬性找到對應的 annotation slot
+                        const annotationEl = mvAnping.querySelector(`.annotation[slot="annotation-${hotspot.slot.replace('hotspot-', '')}"]`);
+                        
+                        if (annotationEl) {
+                            // 滑鼠進入：顯示註釋
+                            hotspot.addEventListener('mouseover', () => {
+                                annotationEl.textContent = annotationText;
+                                annotationEl.style.display = 'block';
+                            });
+
+                            // 滑鼠離開：隱藏註釋
+                            hotspot.addEventListener('mouseout', () => {
+                                annotationEl.style.display = 'none';
+                            });
+                        }
                     });
                 });
             }
 
-            // 匯入模態框開關 (模擬匯入)
-            elements.btnImport.addEventListener('click', () => elements.importModal.showModal());
-            $('#btn-close-modal').addEventListener('click', () => elements.importModal.close());
-            $('#btn-cancel').addEventListener('click', () => elements.importModal.close());
-            
-            // 模擬單筆匯入
-            elements.importForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const name = elements.assetName.value.trim();
-                const location = elements.assetLocation.value.trim();
-                
-                if (name && location) {
-                    const newAsset = {
-                        id: Date.now().toString(),
-                        type: elements.assetType.value.trim().toLowerCase() || 'other',
-                        title_zh: name,
-                        info_zh: `${location} / ${elements.assetType.value.trim() || '自定義'}`,
-                        title_en: name, // 簡化處理：英文名暫用中文
-                        info_en: `${location} / ${elements.assetType.value.trim() || 'Custom'}`,
-                        img_url: elements.assetImgUrl.value.trim() || null,
-                        desc: elements.assetDesc.value.trim() || '自定義匯入資料。'
-                    };
-                    state.knowledge.push(newAsset);
-                    renderKB();
-                    elements.importModal.close();
-                    showToast(t('toast_import_ok', name), 'success');
-                    elements.importForm.reset();
-                } else {
-                    showToast(t('toast_import_error'), 'error');
-                }
+            // ------------------- 摺疊功能 -------------------
+            $$('.collapsible').forEach(header => {
+                header.addEventListener('click', () => {
+                    const body = header.nextElementSibling;
+                    const caret = header.querySelector('.caret');
+                    const isExpanded = header.getAttribute('aria-expanded') === 'true';
+                    
+                    if (isExpanded) {
+                        body.setAttribute('hidden', '');
+                        header.setAttribute('aria-expanded', 'false');
+                        caret.textContent = '►';
+                    } else {
+                        body.removeAttribute('hidden');
+                        header.setAttribute('aria-expanded', 'true');
+                        caret.textContent = '▼';
+                    }
+                });
             });
-            
-            // 模擬 AI 自動摘要
-            $('#btn-ai-summarize').addEventListener('click', async () => {
-                showToast(t('toast_ai_summarizing'), 'default');
-                await new Promise(r => setTimeout(r, 1500)); // 模擬延遲
-                elements.assetDesc.value = elements.assetDesc.value + `\n\n(🤖 AI 摘要模擬) 這是一個關於${elements.assetName.value || '未知'}的重要文化資產，位於${elements.assetLocation.value || '某處'}。`;
-                showToast(t('toast_ai_summarize_ok'), 'success');
-            });
-        }
 
-
-        function init() {
-            // 載入預設資料並初始化
-            state.knowledge = [...DEFAULT_KB];
-            
-            // 載入 API Key 狀態
-            elements.geminiApiInput.value = state.geminiKey;
-            updateRagStatus();
-
-            // 設置語言
-            switchLanguage(state.lang); 
-            
-            // 渲染 KB
-            renderKB();
-
-            // 設置事件監聽器
-            setupEventListeners();
-
-            // 啟動 GPS 追蹤
-            setupGeolocation();
-        }
-
-        // 頁面載入後啟動
-        document.addEventListener('DOMContentLoaded', init);
+        });
     })();
     </script>
 </body>
