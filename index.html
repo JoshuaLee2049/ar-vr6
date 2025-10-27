@@ -180,7 +180,16 @@
     /* VR / A-Frame 尺寸 */
     .vr-card .vr-wrap { width: 100%; height: min(520px, 60vh); background: rgba(0,0,0,.15); border:1px solid var(--glass-border); border-radius: 12px; overflow: hidden; }
     .vr-card .vr-wrap canvas { display:block; }
-  </style>
+  
+    /* AR / model-viewer 尺寸 */
+    .ar-card model-viewer { width: 100%; height: min(520px, 60vh); background: rgba(0,0,0,.15); }
+    /* VR / A-Frame 尺寸 */
+    .vr-card .vr-wrap { width: 100%; height: min(520px, 60vh); background: rgba(0,0,0,.15); border:1px solid var(--glass-border); border-radius: 12px; overflow: hidden; }
+    .vr-card .vr-wrap canvas { display:block; }
+
+    /* Hotspots (AR 註解標註) */
+    .hotspot { --size: 14px; width: var(--size); height: var(--size); border-radius: 999px; border:2px solid rgba(255,255,255,.9); background: rgba(0,255,255,.9); box-shadow: var(--glow-pri); }
+    .annotation { position: absolute; transform: translate(-50%, calc(-100% - 10px)); padding:.35rem .55rem; background: rgba(0,0,0,.75); border:1px solid var(--glass-border); border-radius: 8px; color:#e6f7ff; font-size:.85rem
   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
@@ -1011,8 +1020,36 @@
         show('VR 虛擬展館未啟動：'+reason);
       }
 
-      // 安全性：WebXR 需 HTTPS 或 localhost
+      // 安全性：WebXR  <script>
+    // ---- AR 強化：自動加入 Hotspots 與事件提示（不改動原 HTML 結構） ----
+    (function(){
+      const mv = document.querySelector('.ar-card model-viewer');
+      const toast = document.getElementById('toast');
+      const tip = (msg, type='success')=>{ if(!toast) return; toast.textContent = msg; toast.className = 'toast show '+type;S 或 localhost
       const isSecure = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-      if (!
-</html>
+      if (!isSecure) {
+        fallback('需要在 HTTPS 或 localhost 執行（目前為 '+location.protocol+'）。');
+        return;
+      }
 
+      // A-Frame 是否成功載入
+      if (!window.AFRAME) {
+        fallback('A-Frame 載入失敗或被沙盒策略封鎖。');
+        return;
+      }
+
+      // 嘗試建立場景，若失敗也降級
+      try {
+        const scene = document.querySelector('.vr-card a-scene');
+        if (!scene) throw new Error('找不到 a-scene');
+        // 監聽載入錯誤
+        scene.addEventListener('rendererinitialized', ()=>{/* ok */});
+        scene.addEventListener('error',(e)=>fallback('渲染器錯誤：'+(e && e.message || '未知')));
+      } catch(err){
+        fallback(err.message||String(err));
+      }
+    })();
+  </script>
+</body>
+</html>
+</html>
