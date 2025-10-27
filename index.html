@@ -424,152 +424,268 @@
     const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
 
     /* i18n 字典（略，與你提供一致） */
-    const i18n = {
-      'zh-Hant': {
-        ui_lang: '介面語言:', title: '文化智遊儀表板',
-        nav_guide: '導覽', nav_knowledge: '知識庫', nav_experience: '體驗', nav_personal: '個人中心',
-        h2_api: 'API 整合服務模組', p_api: '系統服務狀態與金鑰設定', status_rag: 'RAG 服務：尚未連線', status_data: '開放資料：同步中', btn_save: '儲存設定',
-        h2_guide: 'AI 智能導覽', p_guide: '您的隨身文化嚮導', chat_init: '[系統初始化] 檢測到 RAG 核心未啟動。請在上方輸入您的 Gemini Key 以連線文化知識庫。', placeholder_chat: '輸入您的文化問題或導覽需求...', btn_send: '發送',
-        h2_db: '文化知識庫', p_db: '探索全台文化資產 (RAG 資料源)', btn_import: '↓ 匯入新資料', placeholder_search: '搜尋古蹟、文物、歷史事件...',
-        filter_all: '全部', filter_monument: '古蹟', filter_museum: '博物館', filter_intangible: '無形文化',
-        h2_immersive: '沉浸式體驗', p_immersive: '啟動您的時光機', tag_ar: 'AR 實景還原', h4_anping: '安平古堡：熱蘭遮城 1632', tag_vr: 'VR 虛擬展館', h4_taipei: '已消失的台北城牆 (數位重建)',
-        h2_local: '在地即時資訊', p_local: '整合開放資料', map_placeholder: '--- 互動地圖載入區域 ---',
-        bus_route: '[市區公車] 77路', bus_status: '即將抵達：赤崁樓站 (3 分鐘)',
-        event_name: '[節慶活動] 府城文化節', event_status: '進行中：孔廟園區 (距離 1.2km)',
-        h2_personal: '個人化中心', p_personal: '您的文化足跡', card_fav: '我的收藏', card_fav_p: '您已收藏 12 個景點與 3 篇導覽',
-        card_trip: '我的行程', card_trip_p: '您有 1 個即將到來的行程 (台南三日遊)', card_ach: '我的成就', card_ach_p: '已解鎖「府城探索者」徽章',
-        modal_title: '匯入自定義文化資產', modal_label_name: '資產名稱 (必填)', modal_label_location: '地點 / 縣市 (必填)', modal_label_type: '類型 (古蹟/博物館/無形文化...)',
-        modal_label_img: '圖片 URL (選填)', modal_label_desc: '簡要描述 (用於 AI 導覽 RAG)', modal_h4_csv: '或：批次匯入 CSV 資料',
-        btn_ai_summarize: '🤖 AI 自動摘要 (模擬)', btn_cancel: '取消', btn_submit: '單筆匯入並啟用', btn_import_csv: '批次匯入 CSV',
-        toast_lang_switched: (isZh) => `介面已切換為 ${isZh ? '繁體中文' : 'English'}（已儲存）`,
-        toast_key_ok: 'Gemini API Key 儲存並驗證成功！服務核心啟動。',
-        toast_key_bad: 'Gemini API Key 格式錯誤或無效。',
-        toast_need_key: '請先在 API 設定模組中輸入有效的 Gemini Key。',
-        toast_import_error: '請填寫「資產名稱」與「地點」。',
-        toast_import_ok: (name) => `成功匯入資產：「${name}」。已加入 RAG 資料源。`,
-        toast_ai_summarizing: 'AI 摘要處理中...', toast_ai_summarize_ok: '摘要完成！已回填至描述欄位。',
-        toast_import_csv_error: 'CSV 匯入失敗，請檢查檔案和格式 (需包含 title, location 欄位)。',
-        toast_import_csv_ok: (count) => `成功匯入 ${count} 筆資產。已加入 RAG 資料源。`,
-      },
-      en: {
-        ui_lang: 'Language:', title: 'Culture Guide Dashboard',
-        nav_guide: 'Guide', nav_knowledge: 'Knowledge Base', nav_experience: 'Experience', nav_personal: 'Personal Center',
-        h2_api: 'API Integration Module', p_api: 'System Status and Key Settings', status_rag: 'RAG Service: Disconnected', status_data: 'Open Data: Syncing', btn_save: 'Save Settings',
-        h2_guide: 'AI Smart Guide', p_guide: 'Your Personal Culture Companion', chat_init: '[System Init] RAG Core Offline. Please enter your Gemini Key above to connect the Knowledge Base.',
-        placeholder_chat: 'Enter your culture question or guidance request...', btn_send: 'Send',
-        h2_db: "Cultural Knowledge Base", p_db: "Explore Taiwan's Cultural Assets (RAG Source)", btn_import: '↓ Import New Data', placeholder_search: 'Search: Monuments, artifacts, history...',
-        filter_all: 'ALL', filter_monument: 'Monuments', filter_museum: 'Museums', filter_intangible: 'Intangible',
-        h2_immersive: 'Immersive Experience', p_immersive: 'Launch Your Time Machine', tag_ar: 'AR Live Restoration', h4_anping: 'Anping Fort: Zeelandia 1632',
-        tag_vr: 'VR Virtual Exhibition', h4_taipei: 'Lost Taipei City Walls (Digital)',
-        h2_local: 'Local Real-Time Info', p_local: 'Open Data Integration',
-        map_placeholder: '--- Interactive Map Loading Area ---',
-        bus_route: '[TRANSIT] Route 77', bus_status: 'Arriving: Chikan Tower (3 min)',
-        event_name: '[EVENT] Fucheng Culture Fest', event_status: 'Active: Confucius Temple (1.2km)',
-        h2_personal: 'Personal Center', p_personal: 'Your Cultural Footprint',
-        card_fav: 'My Favorites', card_fav_p: '12 assets and 3 tours saved.',
-        card_trip: 'My Trips', card_trip_p: '1 upcoming itinerary (Tainan 3-Day)',
-        card_ach: 'My Achievements', card_ach_p: "Achieved: 'Fucheng Explorer' Badge",
-        modal_title: 'Import Custom Cultural Asset', modal_label_name: 'Asset Name (Required)', modal_label_location: 'Location / City (Required)',
-        modal_label_type: 'Type (Monument/Museum/Intangible...)', modal_label_img: 'Image URL (Optional)', modal_label_desc: 'Brief Description (for RAG)',
-        modal_h4_csv: 'OR: Batch Import CSV Data', btn_ai_summarize: '🤖 AI Auto Summarize (Simulated)', btn_cancel: 'Cancel', btn_submit: 'Import Single Asset', btn_import_csv: 'Import CSV Batch',
-        toast_lang_switched: (isZh) => `Language switched to ${isZh ? '繁體中文' : 'English'} (saved)`,
-        toast_key_ok: 'Gemini API Key validated! Service core started.',
-        toast_key_bad: 'Gemini API Key error or invalid.', toast_need_key: 'Please enter a valid Gemini Key in API settings first.',
-        toast_import_error: 'Please fill Asset Name & Location.', toast_import_ok: (name) => `Imported: "${name}". Added to RAG source.`,
-        toast_ai_summarizing: 'AI summarizing in progress...', toast_ai_summarize_ok: 'Summarization complete! Result filled into description.',
-        toast_import_csv_error: 'CSV import failed. Check file and format (requires title, location columns).',
-        toast_import_csv_ok: (count) => `Successfully imported ${count} assets. Added to RAG source.`,
-      }
-    };
+    <script>
+(function(){
+  'use strict';
+  const $ = (sel, root=document) => root.querySelector(sel);
+  const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
 
-    const state = {
-      lang: localStorage.getItem('lang') || 'zh-Hant',
-      ragReady: localStorage.getItem('ragReady') === 'true',
-      geminiKey: localStorage.getItem('geminiKey') || '',
-      knowledge: [],
-      filter: 'all',
-      search: '',
-    };
-
-    const DEFAULT_KB = [
-      { id:'1', type:'monument', title_zh:'赤崁樓', info_zh:'台南市 / 一級古蹟', title_en:'Chikan Tower', info_en:'Tainan / Grade 1 Monument', img_url:'https://via.placeholder.com/640x360/222233/aaaaaa?text=Chikan+Tower', desc:'赤崁樓始建於 1653 年，為荷蘭人所建，歷經清朝重建與日治時期修繕，是台南最具代表性的古蹟之一。'},
-      { id:'2', type:'museum',   title_zh:'西門紅樓', info_zh:'台北市 / 歷史建築', title_en:'Ximen Red House', info_en:'Taipei / Historical Building', img_url:'https://via.placeholder.com/640x360/222233/aaaaaa?text=Red+House', desc:'西門紅樓是一座兩層高的紅磚洋樓，見證了西門町的歷史發展。'},
-      { id:'3', type:'intangible', title_zh:'媽祖繞境', info_zh:'中台灣 / 無形文化', title_en:'Mazu Pilgrimage', info_en:'Central Taiwan / Intangible Heritage', img_url:'https://via.placeholder.com/640x360/222233/aaaaaa?text=Mazu+Pilgrimage', desc:'中元普渡民俗與宗教文化的代表活動之一，強調對先人敬意與社群連結。'},
-    ];
-
-    // DOM
-    const ragDot=$('#rag-dot'), ragText=$('#rag-text'), btnSaveAPI=$('#btn-save-api'), inputGemini=$('#gemini-api');
-    const btnZh=$('#btn-zh'), btnEn=$('#btn-en');
-    const kbGrid=$('#kb-grid'), kbTpl=$('#kb-card-tpl'), kbSearch=$('#kb-search'), filterButtons=$$('.filter');
-    const chatBox=$('#chat'), chatInput=$('#chat-input'), btnSend=$('#btn-send');
-    const localToggle=$('#local-toggle'), localBody=$('#local-body'), meToggle=$('#me-toggle'), meBody=$('#me-body');
-    const modal=$('#import-modal'), btnImport=$('#btn-import'), btnCloseModal=$('#btn-close-modal'), btnCancel=$('#btn-cancel'), importForm=$('#import-form');
-    const inputName=$('#asset-name'), inputLoc=$('#asset-location'), inputType=$('#asset-type'), inputImgUrl=$('#asset-img-url'), inputDesc=$('#asset-desc'), btnAiSummarize=$('#btn-ai-summarize'), inputFileCsv=$('#asset-csv-file'), btnImportCsv=$('#btn-import-csv');
-    const toaster=$('#toast');
-
-    init();
-
-    function init(){
-      inputGemini.value = state.geminiKey;
-      setRagUI(state.ragReady);
-      applyLang(state.lang, false);
-      loadKnowledge();
-      renderKB();
-      bindEvents();
-      if (state.ragReady){
-        chatBox.innerHTML='';
-        addBubble('ai', t('chat_init').replace('未啟動','已於上次連線時啟動'));
-      }
+  // ===== i18n（沿用你原本的字典） =====
+  const i18n = {
+    'zh-Hant': {
+      ui_lang:'介面語言:', title:'文化智遊儀表板', nav_guide:'導覽', nav_knowledge:'知識庫', nav_experience:'體驗', nav_personal:'個人中心',
+      h2_api:'API 整合服務模組', p_api:'系統服務狀態與金鑰設定', status_rag:'RAG 服務：尚未連線', status_data:'開放資料：同步中', btn_save:'儲存設定',
+      h2_guide:'AI 智能導覽', p_guide:'您的隨身文化嚮導',
+      chat_init:'[系統初始化] 檢測到 RAG 核心未啟動。請在上方輸入您的 Gemini Key 以連線文化知識庫。',
+      placeholder_chat:'輸入您的文化問題或導覽需求...', btn_send:'發送',
+      h2_db:'文化知識庫', p_db:'探索全台文化資產 (RAG 資料源)', btn_import:'↓ 匯入新資料',
+      placeholder_search:'搜尋古蹟、文物、歷史事件...', filter_all:'全部', filter_monument:'古蹟', filter_museum:'博物館', filter_intangible:'無形文化',
+      h2_immersive:'沉浸式體驗', p_immersive:'啟動您的時光機', tag_ar:'AR 實景還原', h4_anping:'安平古堡：熱蘭遮城 1632', tag_vr:'VR 虛擬展館', h4_taipei:'已消失的台北城牆 (數位重建)',
+      h2_local:'在地即時資訊', p_local:'整合開放資料', map_placeholder:'--- 互動地圖載入區域 ---',
+      bus_route:'[市區公車] 77路', bus_status:'即將抵達：赤崁樓站 (3 分鐘)', event_name:'[節慶活動] 府城文化節', event_status:'進行中：孔廟園區 (距離 1.2km)',
+      h2_personal:'個人化中心', p_personal:'您的文化足跡', card_fav:'我的收藏', card_fav_p:'您已收藏 12 個景點與 3 篇導覽', card_trip:'我的行程', card_trip_p:'您有 1 個即將到來的行程 (台南三日遊)', card_ach:'我的成就', card_ach_p:'已解鎖「府城探索者」徽章',
+      modal_title:'匯入自定義文化資產', modal_label_name:'資產名稱 (必填)', modal_label_location:'地點 / 縣市 (必填)', modal_label_type:'類型 (古蹟/博物館/無形文化...)', modal_label_img:'圖片 URL (選填)', modal_label_desc:'簡要描述 (用於 AI 導覽 RAG)',
+      modal_h4_csv:'或：批次匯入 CSV 資料', btn_ai_summarize:'🤖 AI 自動摘要 (模擬)', btn_cancel:'取消', btn_submit:'單筆匯入並啟用', btn_import_csv:'批次匯入 CSV',
+      toast_lang_switched: (isZh)=>`介面已切換為 ${isZh?'繁體中文':'English'}（已儲存）`,
+      toast_key_ok:'Gemini API Key 儲存並驗證成功！服務核心啟動。',
+      toast_key_bad:'Gemini API Key 格式錯誤或無效。',
+      toast_need_key:'請先在 API 設定模組中輸入有效的 Gemini Key。',
+      toast_import_error:'請填寫「資產名稱」與「地點」。',
+      toast_import_ok:(name)=>`成功匯入資產：「${name}」。已加入 RAG 資料源。`,
+      toast_ai_summarizing:'AI 摘要處理中...', toast_ai_summarize_ok:'摘要完成！已回填至描述欄位。',
+      toast_import_csv_error:'CSV 匯入失敗，請檢查檔案和格式 (需包含 title, location 欄位)。',
+      toast_import_csv_ok:(count)=>`成功匯入 ${count} 筆資產。已加入 RAG 資料源。`,
+    },
+    en: {
+      ui_lang:'Language:', title:'Culture Guide Dashboard', nav_guide:'Guide', nav_knowledge:'Knowledge Base', nav_experience:'Experience', nav_personal:'Personal Center',
+      h2_api:'API Integration Module', p_api:'System Status and Key Settings', status_rag:'RAG Service: Disconnected', status_data:'Open Data: Syncing', btn_save:'Save Settings',
+      h2_guide:'AI Smart Guide', p_guide:'Your Personal Culture Companion',
+      chat_init:'[System Init] RAG Core Offline. Please enter your Gemini Key above to connect the Knowledge Base.',
+      placeholder_chat:'Enter your culture question or guidance request...', btn_send:'Send',
+      h2_db:"Cultural Knowledge Base", p_db:"Explore Taiwan's Cultural Assets (RAG Source)", btn_import:'↓ Import New Data',
+      placeholder_search:'Search: Monuments, artifacts, history...', filter_all:'ALL', filter_monument:'Monuments', filter_museum:'Museums', filter_intangible:'Intangible',
+      h2_immersive:'Immersive Experience', p_immersive:'Launch Your Time Machine', tag_ar:'AR Live Restoration', h4_anping:'Anping Fort: Zeelandia 1632', tag_vr:'VR Virtual Exhibition', h4_taipei:'Lost Taipei City Walls (Digital)',
+      h2_local:'Local Real-Time Info', p_local:'Open Data Integration', map_placeholder:'--- Interactive Map Loading Area ---',
+      bus_route:'[TRANSIT] Route 77', bus_status:'Arriving: Chikan Tower (3 min)', event_name:'[EVENT] Fucheng Culture Fest', event_status:'Active: Confucius Temple (1.2km)',
+      h2_personal:'Personal Center', p_personal:'Your Cultural Footprint', card_fav:'My Favorites', card_fav_p:'12 assets and 3 tours saved.', card_trip:'My Trips', card_trip_p:'1 upcoming itinerary (Tainan 3-Day)', card_ach:'My Achievements', card_ach_p:"Achieved: 'Fucheng Explorer' Badge",
+      modal_title:'Import Custom Cultural Asset', modal_label_name:'Asset Name (Required)', modal_label_location:'Location / City (Required)', modal_label_type:'Type (Monument/Museum/Intangible...)', modal_label_img:'Image URL (Optional)', modal_label_desc:'Brief Description (for RAG)', modal_h4_csv:'OR: Batch Import CSV Data', btn_ai_summarize:'🤖 AI Auto Summarize (Simulated)', btn_cancel:'Cancel', btn_submit:'Import Single Asset', btn_import_csv:'Import CSV Batch',
+      toast_lang_switched:(isZh)=>`Language switched to ${isZh?'繁體中文':'English'} (saved)`,
+      toast_key_ok:'Gemini API Key validated! Service core started.',
+      toast_key_bad:'Gemini API Key error or invalid.',
+      toast_need_key:'Please enter a valid Gemini Key in API settings first.',
+      toast_import_error:'Please fill Asset Name & Location.',
+      toast_import_ok:(name)=>`Imported: "${name}". Added to RAG source.`,
+      toast_ai_summarizing:'AI summarizing in progress...', toast_ai_summarize_ok:'Summarization complete! Result filled into description.',
+      toast_import_csv_error:'CSV import failed. Check file and format (requires title, location columns).',
+      toast_import_csv_ok:(count)=>`Successfully imported ${count} assets. Added to RAG source.`,
     }
+  };
 
-    // i18n helpers
-    function t(key){ const lang = state.lang in i18n ? state.lang : 'zh-Hant'; const val = i18n[lang][key]; return (typeof val==='function') ? key : (val ?? key); }
-    function applyLang(lang, showToast=true){
-      state.lang = lang;
-      const dict = i18n[lang] || i18n['zh-Hant'];
-      $$('[data-key]').forEach(el=>{ const key=el.getAttribute('data-key'); let val=dict[key]; if(typeof val==='function') val=key; if(!val) return;
-        if (el.tagName==='INPUT' && el.hasAttribute('placeholder')) { el.placeholder = val; } else { el.textContent = val; }
+  // ===== App 狀態與常數 =====
+  const GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+  const state = {
+    lang: localStorage.getItem('lang') || 'zh-Hant',
+    ragReady: localStorage.getItem('ragReady') === 'true',
+    geminiKey: localStorage.getItem('geminiKey') || '',
+    knowledge: [],
+    filter: 'all',
+    search: ''
+  };
+
+  const DEFAULT_KB = [
+    { id:'1', type:'monument',  title_zh:'赤崁樓', info_zh:'台南市 / 一級古蹟', title_en:'Chikan Tower', info_en:'Tainan / Grade 1 Monument', img_url:'https://via.placeholder.com/640x360/222233/aaaaaa?text=Chikan+Tower', desc:'赤崁樓始建於 1653 年，為荷蘭人所建，歷經清朝重建與日治時期修繕，是台南最具代表性的古蹟之一。' },
+    { id:'2', type:'museum',    title_zh:'西門紅樓', info_zh:'台北市 / 歷史建築', title_en:'Ximen Red House', info_en:'Taipei / Historical Building', img_url:'https://via.placeholder.com/640x360/222233/aaaaaa?text=Red+House', desc:'西門紅樓是一座兩層高的紅磚洋樓，見證了西門町的歷史發展。' },
+    { id:'3', type:'intangible',title_zh:'媽祖繞境', info_zh:'中台灣 / 無形文化', title_en:'Mazu Pilgrimage', info_en:'Central Taiwan / Intangible Heritage', img_url:'https://via.placeholder.com/640x360/222233/aaaaaa?text=Mazu+Pilgrimage', desc:'中元普渡民俗與宗教文化的代表活動之一，強調對先人敬意與社群連結。' }
+  ];
+
+  // ===== DOM 參照 =====
+  const ragDot = $('#rag-dot'); const ragText=$('#rag-text'); const btnSaveAPI=$('#btn-save-api'); const inputGemini=$('#gemini-api');
+  const btnZh=$('#btn-zh'); const btnEn=$('#btn-en');
+  const kbGrid=$('#kb-grid'); const kbTpl=$('#kb-card-tpl'); const kbSearch=$('#kb-search'); const filterButtons=$$('.filter');
+  const chatBox=$('#chat'); const chatInput=$('#chat-input'); const btnSend=$('#btn-send');
+  const toaster=$('#toast');
+
+  // ===== 初始化 =====
+  function init(){
+    inputGemini.value = state.geminiKey;
+    setRagUI(state.ragReady);
+    applyLang(state.lang);
+    loadKnowledge(); renderKB();
+    bindEvents();
+    if (state.ragReady){
+      chatBox.innerHTML = '';
+      addBubble('ai', t('chat_init').replace('未啟動','已於上次連線時啟動'));
+    }
+  }
+
+  // ===== 工具 =====
+  function t(key){ const lang = state.lang in i18n ? state.lang : 'zh-Hant'; const val = i18n[lang][key]; return (typeof val==='function') ? key : (val ?? key); }
+  function toast(message,type='default'){ toaster.textContent=message; toaster.className='toast show '+type; clearTimeout(toaster.timer); toaster.timer=setTimeout(()=>toaster.classList.remove('show'),3000); }
+  function setRagUI(ready){ if (ready){ ragDot.classList.add('ok'); ragText.textContent = (state.lang==='zh-Hant')?'RAG 服務：已連線':'RAG Service: Connected'; } else { ragDot.classList.remove('ok'); ragText.textContent=t('status_rag'); } }
+  function applyLang(lang){
+    state.lang = lang; const dict = i18n[lang] || i18n['zh-Hant'];
+    $$('[data-key]').forEach(el=>{ const key=el.getAttribute('data-key'); let val=dict[key]; if (typeof val==='function') val=key; if (!val) return;
+      if (el.tagName==='INPUT' && el.hasAttribute('placeholder')) el.placeholder=val; else el.textContent=val; });
+    localStorage.setItem('lang', lang); toast(dict.toast_lang_switched(lang==='zh-Hant'), 'success');
+    renderKB(); setRagUI(state.ragReady); $('#app-title').textContent=t('title');
+  }
+  function addBubble(role,text){ const b=document.createElement('div'); b.className='bubble '+(role==='ai'?'ai':'user'); b.textContent=text; chatBox.appendChild(b); chatBox.scrollTop=chatBox.scrollHeight; }
+
+  // ===== 知識庫 =====
+  function loadKnowledge(){ let custom=[]; try{ custom = JSON.parse(localStorage.getItem('customKnowledge')||'[]'); }catch{} custom=custom.map(a=>({type:(a.type||'custom').toLowerCase(),...a})); state.knowledge=[...DEFAULT_KB, ...custom]; }
+  function matchFilter(a){ if (state.filter==='all') return true; return (a.type||'').toLowerCase().includes(state.filter); }
+  function matchSearch(a){ const q=state.search.trim().toLowerCase(); if (!q) return true;
+    return ((a.title_zh||'').toLowerCase().includes(q) || (a.title_en||'').toLowerCase().includes(q) || (a.desc||'').toLowerCase().includes(q) || (a.info_zh||'').toLowerCase().includes(q) || (a.info_en||'').toLowerCase().includes(q)); }
+  function renderKB(){ kbGrid.innerHTML=''; const lang=state.lang; const list=state.knowledge.filter(matchFilter).filter(matchSearch);
+    const frag=document.createDocumentFragment();
+    list.forEach(a=>{
+      const node=kbTpl.content.firstElementChild.cloneNode(true);
+      node.dataset.id=a.id;
+      const img=$('img',node); const title=$('.title',node); const meta=$('.meta',node);
+      const label=(lang==='zh-Hant'? (a.title_zh||a.title_en||'') : (a.title_en||a.title_zh||''));
+      img.loading='lazy'; img.decoding='async';
+      img.src=a.img_url || `https://via.placeholder.com/600x340/4a4a5a/ffffff?text=${encodeURIComponent(label.slice(0,12))}`;
+      img.alt=label || 'asset image';
+      title.textContent=label;
+      meta.textContent=(lang==='zh-Hant' ? (a.info_zh||a.info_en) : (a.info_en||a.info_zh)) || '';
+      frag.appendChild(node);
+    });
+    kbGrid.appendChild(frag);
+  }
+
+  // ===== Gemini 呼叫 =====
+  async function geminiPing(key){
+    const resp = await fetch(`${GEMINI_ENDPOINT}?key=${encodeURIComponent(key)}`,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ contents:[{ parts:[{ text:'ping'}] }], generationConfig:{maxOutputTokens:4, temperature:0} })
+    });
+    if (!resp.ok){
+      let msg=`HTTP ${resp.status}`;
+      try{ const j=await resp.json(); if (j?.error?.message) msg += `：${j.error.message}`; }catch{}
+      throw new Error(msg);
+    }
+  }
+
+  async function geminiGenerate(key, userText, contextBlocks, lang){
+    // contextBlocks: 陣列，每筆 {title, info, desc}
+    const ctx = (contextBlocks||[]).map((c,i)=>`[${i+1}] ${c.title}（${c.info}）\n${c.desc||''}`).join('\n\n');
+    const sys = (lang==='zh-Hant')
+      ? `你是文化導覽助理。若提供了【知識庫片段】就優先依片段回答，必要時補充常識，但避免編造。以簡潔分段中文回覆。`
+      : `You are a cultural guide. Prefer answering from the provided [KB snippets]; add general facts if needed but avoid fabrication. Reply concisely in ${lang==='en'?'English':'the user language'}.`;
+    const prompt = (ctx ? ((lang==='zh-Hant')? `【知識庫片段】\n${ctx}\n\n問題：${userText}\n請依片段作答；若片段不足，再補充背景。` :
+                                      `[KB Snippets]\n${ctx}\n\nQuestion: ${userText}\nAnswer using the snippets; add background only if needed.`)
+                          : userText);
+
+    const resp = await fetch(`${GEMINI_ENDPOINT}?key=${encodeURIComponent(key)}`,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        systemInstruction:{ parts:[{text: sys}] },
+        contents:[{ role:'user', parts:[{text: prompt}] }],
+        generationConfig:{ temperature:0.3, topP:0.9, maxOutputTokens:512 }
+      })
+    });
+    if (!resp.ok){
+      let msg=`HTTP ${resp.status}`;
+      try{ const j=await resp.json(); if (j?.error?.message) msg += `：${j.error.message}`; }catch{}
+      throw new Error(msg);
+    }
+    const data = await resp.json();
+    const text = data?.candidates?.[0]?.content?.parts?.map(p=>p.text).join('') || '';
+    return text.trim() || (lang==='zh-Hant' ? '（未取得模型回應）' : '(No model output)');
+  }
+
+  // 從知識庫挑一筆最相近（超簡易檢索）
+  function pickKBContext(query){
+    const q=query.toLowerCase();
+    let best=null, score=0;
+    for(const a of state.knowledge){
+      const blob = `${a.title_zh||''} ${a.title_en||''} ${a.info_zh||''} ${a.info_en||''} ${a.desc||''}`.toLowerCase();
+      let s=0;
+      // 極簡打分：關鍵詞重疊
+      q.split(/\s+/).forEach(tok=>{ if (tok && blob.includes(tok)) s++; });
+      if (s>score){ score=s; best=a; }
+    }
+    if (!best || score===0) return [];
+    return [{
+      title: (state.lang==='zh-Hant')? (best.title_zh||best.title_en): (best.title_en||best.title_zh),
+      info: (state.lang==='zh-Hant')? (best.info_zh||best.info_en): (best.info_en||best.info_zh),
+      desc: best.desc||''
+    }];
+  }
+
+  // ===== 事件 =====
+  function bindEvents(){
+    $('#btn-zh').addEventListener('click',()=>applyLang('zh-Hant'));
+    $('#btn-en').addEventListener('click',()=>applyLang('en'));
+
+    // ▶ 這段是新的：按下儲存 → 真的驗證 Key
+    btnSaveAPI.addEventListener('click', async ()=>{
+      const key = inputGemini.value.trim();
+      if (!key){ toast(i18n[state.lang].toast_key_bad, 'error'); return; }
+      try{
+        await geminiPing(key);
+        state.geminiKey = key;
+        state.ragReady = true;
+        localStorage.setItem('geminiKey', key);
+        localStorage.setItem('ragReady', 'true');
+        setRagUI(true);
+        toast(i18n[state.lang].toast_key_ok,'success');
+        addBubble('ai', (state.lang==='zh-Hant')?'服務已啟動。RAG 檢索就緒，請開始提問！':'Service initiated. RAG retrieval is ready.');
+      }catch(err){
+        state.ragReady = false;
+        localStorage.setItem('ragReady','false');
+        setRagUI(false);
+        toast('Gemini 驗證失敗：'+(err.message||err),'error');
+      }
+    });
+
+    // 聊天送出：改用 Gemini
+    btnSend.addEventListener('click', handleChatSend);
+    chatInput.addEventListener('keypress', e=>{ if (e.key==='Enter') handleChatSend(); });
+
+    // KB 篩選/搜尋
+    kbSearch?.addEventListener('input', e=>{ state.search=e.target.value; renderKB(); });
+    filterButtons.forEach(btn=>{
+      btn.addEventListener('click', e=>{
+        $$('.filter').forEach(b=>b.classList.remove('active'));
+        e.target.classList.add('active');
+        state.filter = e.target.dataset.filter;
+        renderKB();
       });
-      localStorage.setItem('lang', lang);
-      $('#app-title').textContent = t('title');
-      setRagUI(state.ragReady);
-      renderKB();
-      btnZh.setAttribute('aria-pressed', String(lang==='zh-Hant'));
-      btnEn.setAttribute('aria-pressed', String(lang==='en'));
-      if (showToast) toast(dict.toast_lang_switched(lang==='zh-Hant'), 'success');
+    });
+  }
+
+  async function handleChatSend(){
+    const query = chatInput.value.trim();
+    if (!query) return;
+    addBubble('user', query);
+    chatInput.value = '';
+
+    const placeholder = document.createElement('div');
+    placeholder.className='bubble ai';
+    placeholder.textContent = (state.lang==='zh-Hant')?'（AI 生成中…）':'(Generating…)';
+    chatBox.appendChild(placeholder); chatBox.scrollTop=chatBox.scrollHeight;
+
+    if (!state.ragReady || !state.geminiKey){
+      placeholder.textContent = (state.lang==='zh-Hant')
+        ? '偵測到 RAG/模型尚未連線。請先在上方輸入有效的 Gemini Key 並「儲存設定」。'
+        : 'RAG/model is offline. Please enter a valid Gemini Key above and press Save.';
+      toast(i18n[state.lang].toast_need_key, 'error');
+      return;
     }
 
-    // RAG 狀態
-    function setRagUI(ready){
-      if (ready){ ragDot.classList.add('ok'); ragText.textContent = (state.lang==='zh-Hant') ? 'RAG 服務：已連線' : 'RAG Service: Connected'; }
-      else { ragDot.classList.remove('ok'); ragText.textContent = t('status_rag'); }
+    try{
+      const ctx = pickKBContext(query); // 用知識庫當作 RAG 上下文
+      const text = await geminiGenerate(state.geminiKey, query, ctx, state.lang);
+      placeholder.textContent = text;
+    }catch(err){
+      placeholder.textContent = (state.lang==='zh-Hant')
+        ? `呼叫模型失敗：${err.message||err}\n（已退回本地關鍵字檢索）`
+        : `Model call failed: ${err.message||err}\n(Falling back to local KB)`;
     }
+  }
 
-    // 知識庫
-    function loadKnowledge(){
-      let custom=[];
-      try{ custom = JSON.parse(localStorage.getItem('customKnowledge')||'[]'); }catch{}
-      custom = custom.map(a=>({ type:(a.type||'custom').toLowerCase(), ...a }));
-      state.knowledge = [...DEFAULT_KB, ...custom];
-    }
-    function addCustomAsset(asset){
-      const stored = JSON.parse(localStorage.getItem('customKnowledge')||'[]');
-      stored.push(asset);
-      localStorage.setItem('customKnowledge', JSON.stringify(stored));
-      loadKnowledge();
-      renderKB();
-    }
-
-    // CSV 解析（支援引號）
-    function parseCsv(text){
-      const lines = text.replace(/\r\n?/g,'\n').split('\n').filter(Boolean);
-      if (lines.length<2) return null;
-      const headers = splitCsvLine(lines[0]).map(s=>s.trim().toLowerCase());
-      const idx = { title:headers.indexOf('title'), location:headers.indexOf('location'), type:headers.indexOf('type'), desc:headers.indexOf('desc'), img:headers.indexOf('img_url') };
-      if (idx.title===-1 || idx.location===-1) return null;
-      const out=[];
-      for(let i=1;i<lines.length;i++){
-        const cols = splitCsvLine(lines[i]);
-        const get = j => (j>=0 && cols[j]!=null ? cols[j].trim(): '');
-        const title=get(idx.title), loc=get(idx.location
-
+  // 啟動
+  init();
+})();
+</script>
