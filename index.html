@@ -174,8 +174,16 @@
   
     /* AR / model-viewer 尺寸 */
     .ar-card model-viewer { width: 100%; height: min(520px, 60vh); background: rgba(0,0,0,.15); }
+  
+    /* AR / model-viewer 尺寸 */
+    .ar-card model-viewer { width: 100%; height: min(520px, 60vh); background: rgba(0,0,0,.15); }
+    /* VR / A-Frame 尺寸 */
+    .vr-card .vr-wrap { width: 100%; height: min(520px, 60vh); background: rgba(0,0,0,.15); border:1px solid var(--glass-border); border-radius: 12px; overflow: hidden; }
+    .vr-card .vr-wrap canvas { display:block; }
   </style>
   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 </head>
 <body>
   <!-- 語言切換 -->
@@ -279,24 +287,64 @@
       </div>
       <p class="module-sub" data-key="p_immersive">啟動您的時光機</p>
 
-      <div class="xp-grid">
-        <!-- AR Demo 1: 安平古堡（以 Astronaut 作為模型佔位） -->
-        <article class="xp-card ar-card" aria-label="AR 實景：安平古堡（示意模型）">
-          <model-viewer src="https://modelviewer.dev/shared-assets/models/Astronaut.glb"
-                        ios-src="https://modelviewer.dev/shared-assets/models/Astronaut.usdz"
-                        alt="安平古堡示意 3D 模型"
-                        ar ar-modes="webxr scene-viewer quick-look"
+      <div class=\"xp-grid\">
+        <!-- AR Demo 1: 安平古堡（示意） -->
+        <article class=\"xp-card ar-card\" aria-label=\"AR 實景：安平古堡（示意模型）\">
+          <model-viewer src=\"https://modelviewer.dev/shared-assets/models/Astronaut.glb\"
+                        ios-src=\"https://modelviewer.dev/shared-assets/models/Astronaut.usdz\"
+                        alt=\"安平古堡示意 3D 模型\"
+                        ar ar-modes=\"webxr scene-viewer quick-look\"
                         camera-controls
-                        shadow-intensity="1"
-                        exposure="1"
-                        poster="https://via.placeholder.com/800x520/331144/cccccc?text=Tap+to+Load+AR"
-                        aria-label="啟動 AR 檢視">
-            <button slot="ar-button" class="btn primary" style="position:absolute; left:1rem; bottom:1rem">在實境中查看</button>
+                        shadow-intensity=\"1\"
+                        exposure=\"1\"
+                        poster=\"https://via.placeholder.com/800x520/331144/cccccc?text=Tap+to+Load+AR\"
+                        aria-label=\"啟動 AR 檢視\">
+            <button slot=\"ar-button\" class=\"btn primary\" style=\"position:absolute; left:1rem; bottom:1rem\">在實境中查看</button>
           </model-viewer>
-          <div class="xp-overlay">
-            <span class="tag" data-key="tag_ar">AR 實景還原</span>
-            <h4 style="margin:.2rem 0" data-key="h4_anping">安平古堡：熱蘭遮城 1632（AR 示意）</h4>
+          <div class=\"xp-overlay\">
+            <span class=\"tag\" data-key=\"tag_ar\">AR 實景還原</span>
+            <h4 style=\"margin:.2rem 0\" data-key=\"h4_anping\">安平古堡：熱蘭遮城 1632（AR 示意）</h4>
           </div>
+        </article>
+
+        <!-- AR Demo 2: 台北城牆（示意） -->
+        <article class=\"xp-card ar-card\" aria-label=\"AR 實景：台北城牆（示意模型）\">
+          <model-viewer src=\"https://modelviewer.dev/shared-assets/models/RobotExpressive.glb\"
+                        ios-src=\"https://modelviewer.dev/shared-assets/models/RobotExpressive.usdz\"
+                        alt=\"台北城牆示意 3D 模型\"
+                        ar ar-modes=\"webxr scene-viewer quick-look\"
+                        camera-controls
+                        environment-image=\"neutral\"
+                        shadow-intensity=\"1\"
+                        poster=\"https://via.placeholder.com/800x520/113333/cccccc?text=Tap+to+Load+AR\"
+                        aria-label=\"啟動 AR 檢視\">
+            <button slot=\"ar-button\" class=\"btn primary\" style=\"position:absolute; left:1rem; bottom:1rem\">在實境中查看</button>
+          </model-viewer>
+          <div class=\"xp-overlay\">
+            <span class=\"tag\" data-key=\"tag_vr\">VR / AR 體驗</span>
+            <h4 style=\"margin:.2rem 0\" data-key=\"h4_taipei\">已消失的台北城牆（AR 示意）</h4>
+          </div>
+        </article>
+
+        <!-- VR Demo: 360° 虛擬展館（A-Frame 嵌入） -->
+        <article class=\"xp-card vr-card\" aria-label=\"VR 虛擬展館：360 全景示意\">
+          <div class=\"vr-wrap\">
+            <a-scene embedded background=\"color: #000\">
+              <a-assets>
+                <img id=\"pano\" crossorigin=\"anonymous\" src=\"https://cdn.aframe.io/360-image-gallery-boilerplate/img/sechelt.jpg\" />
+              </a-assets>
+              <a-sky src=\"#pano\"></a-sky>
+              <a-entity position=\"0 1.6 0\">
+                <a-camera wasd-controls-enabled=\"false\"></a-camera>
+              </a-entity>
+            </a-scene>
+          </div>
+          <div class=\"xp-overlay\">
+            <span class=\"tag\">VR 虛擬展館</span>
+            <h4 style=\"margin:.2rem 0\">已消失的台北城牆（360° 虛擬展館示意）</h4>
+          </div>
+        </article>
+      </div>
         </article>
         
         <!-- AR Demo 2: 台北城牆（以 RobotExpressive 作為模型佔位） -->
@@ -943,5 +991,7 @@
   })();
   </script>
 </body>
+</html>
+
 </html>
 
