@@ -1,159 +1,240 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-Hant" dir="ltr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>文化智遊 - AI 科技儀表板</title>
   <meta name="color-scheme" content="dark" />
+  <meta name="description" content="文化智遊 - AI 科技儀表板：整合 RAG、開放資料、AR/VR 體驗與個人化功能" />
+  <title>文化智遊 - AI 科技儀表板</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet" />
   <style>
-    /* 原樣保留樣式，省略以節省篇幅 */
+    :root{
+      --bg:#070718;--bg-grad-a:rgba(0,255,255,.10);--bg-grad-b:rgba(187,0,255,.10);
+      --pri:#00ffff;--sec:#bb00ff;--text:#e6f7ff;--muted:#8090a0;--ok:#4aff8f;--bad:#ff4a4a;
+      --glass:rgba(0,0,0,.7);--glass-border:rgba(255,255,255,.06);
+      --radius:18px;--radius-sm:10px;--shadow-deep:0 0 30px rgba(0,0,0,.7),0 0 20px rgba(0,255,255,.05),0 0 40px rgba(187,0,255,.08);
+      --space:clamp(.75rem,.75rem + 1.2vw,2rem);
+      --focus:2px solid var(--pri);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;font-family:'Noto Sans TC',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--text);
+      background:radial-gradient(circle at 15% 15%,var(--bg-grad-a),transparent 30%),
+                 radial-gradient(circle at 85% 75%,var(--bg-grad-b),transparent 35%),
+                 linear-gradient(135deg,#070718 0%,#030018 100%);
+      background-color:var(--bg);padding:clamp(1rem,3vw,2.5rem)
+    }
+    :focus-visible{outline:var(--focus);outline-offset:3px;border-radius:8px}
+    @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+
+    /* Layout */
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:clamp(1rem,2vw,2rem)}
+    @media (max-width:960px){.grid{grid-template-columns:1fr}}
+    .row{display:grid;grid-template-columns:repeat(12,1fr);gap:.8rem}
+    .col-3{grid-column:span 3}.col-4{grid-column:span 4}.col-6{grid-column:span 6}.col-8{grid-column:span 8}.col-12{grid-column:span 12}
+    @media (max-width:960px){.col-8,.col-6,.col-4,.col-3{grid-column:span 12}}
+
+    header.header{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:var(--space)}
+    .nav{display:flex;gap:.8rem;flex-wrap:wrap}
+    .nav a{color:var(--muted);text-decoration:none;padding:.4rem .6rem;border-radius:8px}
+    .nav a.active,.nav a:hover{background:rgba(0,255,255,.08);color:var(--text)}
+
+    .panel{background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--radius);box-shadow:var(--shadow-deep);
+      backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);padding:calc(var(--space)*1.1);transition:transform .25s ease,box-shadow .25s ease}
+    .panel:hover{transform:translateY(-2px);box-shadow:0 0 15px rgba(0,255,255,.35),0 0 5px rgba(0,255,255,.18)}
+
+    .module-header{display:flex;align-items:center;gap:.8rem;margin-bottom:.8rem}
+    .module-header h2{margin:0;font-size:clamp(1.1rem,1rem + .8vw,1.5rem);color:var(--pri);text-shadow:0 0 6px rgba(0,255,255,.28)}
+    .module-sub{margin:0;color:var(--muted);font-size:.95rem}
+
+    .chip{display:inline-flex;align-items:center;gap:.4rem;font-family:'Orbitron',monospace;font-weight:700;background:linear-gradient(45deg,var(--pri),var(--sec));color:#091018;border-radius:var(--radius-sm);padding:.35rem .6rem;letter-spacing:.5px}
+    .btn{cursor:pointer;border:1.5px solid var(--pri);background:rgba(0,255,255,.06);color:var(--pri);border-radius:var(--radius-sm);padding:.55rem .9rem;font-size:.95rem;transition:.2s ease}
+    .btn:hover{box-shadow:0 0 15px rgba(0,255,255,.35),0 0 5px rgba(0,255,255,.18);transform:translateY(-1px)}
+    .btn.primary{background:linear-gradient(90deg,var(--pri),#00aaff);color:#081018;border-color:transparent}
+    .input,textarea.input,select.input{width:100%;background:rgba(0,0,0,.4);color:var(--text);border:1px solid var(--glass-border);border-radius:var(--radius-sm);padding:.65rem .8rem;font-size:.95rem}
+
+    /* Chat */
+    .chat{display:flex;flex-direction:column;gap:.6rem;height:clamp(240px,35vh,380px);overflow:auto;background:rgba(255,255,255,.02);border-radius:12px;padding:.8rem;border:1px solid var(--glass-border)}
+    .bubble{max-width:88%;padding:.6rem .8rem;border-radius:14px}
+    .bubble.ai{background:rgba(0,255,255,.08);border:1px solid rgba(0,255,255,.2)}
+    .bubble.user{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);margin-left:auto}
+    .chat-input{display:flex;gap:.5rem;margin-top:.6rem}
+    .chat-input .mic{width:2.25rem}
+
+    /* KB */
+    .kb-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+    @media (max-width:1200px){.kb-grid{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width:720px){.kb-grid{grid-template-columns:1fr}}
+    .kb-card{overflow:hidden;border-radius:16px;border:1px solid var(--glass-border);background:rgba(255,255,255,.02)}
+    .kb-card img{width:100%;display:block;object-fit:cover;aspect-ratio:16/9;height:auto}
+    .kb-card .content{padding:.8rem .9rem}
+    .kb-card h4{margin:0 0 .25rem 0;font-size:1.05rem}
+
+    .filters{display:flex;gap:.6rem;flex-wrap:wrap}
+    .filter{padding:.35rem .6rem;border:1px solid var(--glass-border);border-radius:999px;color:var(--muted);cursor:pointer;background:transparent}
+    .filter[aria-pressed="true"], .filter:hover{border-color:var(--pri);color:var(--text);box-shadow:0 0 15px rgba(0,255,255,.35),0 0 5px rgba(0,255,255,.18)}
+
+    /* Immersive */
+    .xp-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem}
+    @media (max-width:960px){.xp-grid{grid-template-columns:1fr}}
+    .xp-card{position:relative;overflow:hidden;border-radius:16px;border:1px solid var(--glass-border)}
+    .xp-card img{width:100%;display:block;object-fit:cover;aspect-ratio:16/9;height:auto}
+    .xp-overlay{position:absolute;inset:auto 0 0 0;padding:.9rem;background:linear-gradient(180deg,transparent,rgba(0,0,0,.65))}
+    .tag{display:inline-block;padding:.3rem .5rem;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.12);border-radius:8px;margin-bottom:.4rem}
+
+    /* AR / model-viewer */
+    .ar-card model-viewer{width:100%;height:min(520px,60vh);background:rgba(0,0,0,.15)}
+    .hotspot{--size:14px;width:var(--size);height:var(--size);border-radius:999px;border:2px solid rgba(255,255,255,.9);background:rgba(0,255,255,.9);box-shadow:0 0 15px rgba(0,255,255,.35)}
+    .annotation{position:absolute;transform:translate(-50%,calc(-100% - 10px));padding:.35rem .55rem;background:rgba(0,0,0,.75);border:1px solid var(--glass-border);border-radius:8px;color:#e6f7ff;font-size:.85rem;white-space:nowrap;pointer-events:none}
+
+    /* VR / A-Frame */
+    .vr-card .vr-wrap{width:100%;height:min(520px,60vh);background:rgba(0,0,0,.15);border:1px solid var(--glass-border);border-radius:12px;overflow:hidden}
+    .vr-card .vr-wrap canvas{display:block}
+
+    /* Collapsible */
+    .collapsible{cursor:pointer;position:relative}
+    .collapsible .caret{margin-left:auto;font-size:.9rem;opacity:.9}
+    .section-body{margin-top:.6rem;display:block}
+    .section-body[hidden]{display:none}
+
+    /* Modal & Toast */
+    .modal{position:fixed;inset:0;display:none;place-items:center;background:rgba(0,0,0,.82);backdrop-filter:blur(5px);z-index:1000}
+    .modal[open]{display:grid}
+    .modal-card{width:min(640px,92vw);background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--radius);padding:1.1rem;box-shadow:0 0 15px rgba(0,255,255,.35)}
+    .modal-head{display:flex;align-items:center;justify-content:space-between;gap:.6rem;padding-bottom:.6rem;border-bottom:2px solid var(--sec)}
+    .modal-actions{display:flex;gap:.6rem;justify-content:flex-end;margin-top:.8rem}
+    .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%) translateY(120%);background:rgba(0,0,0,.85);color:#fff;padding:.6rem .9rem;border-radius:10px;border:1px solid var(--glass-border);transition:transform .28s ease;z-index:1200;white-space:pre-wrap}
+    .toast.show{transform:translateX(-50%) translateY(0)}
+    .toast.success{box-shadow:0 0 0 2px rgba(74,255,143,.2)}
+    .toast.error{box-shadow:0 0 0 2px rgba(255,74,74,.2)}
+
+    /* Utilities */
+    .sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
   </style>
-  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
-  <script src="https://aframe.io/releases/1.5.0/aframe.min.js" crossorigin="anonymous"></script>
+  <!-- AR 與 VR 依賴 -->
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js" defer></script>
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js" crossorigin="anonymous" defer></script>
 </head>
 <body>
-  <!-- 原始結構保持不變，包括語言切換、API 模組、AI 導覽、知識庫、沉浸式體驗、在地資訊、個人中心、modal 等區塊 -->
-  <!-- 此處省略 HTML 主體以重點展示新增的 Gemini 驗證部分 -->
+  <!-- 語系切換 -->
+  <div class="lang-switch" style="display:flex; gap:.5rem; align-items:center; margin-bottom:.6rem;">
+    <span style="color:var(--text); font-size:.9rem" data-i18n="ui_lang">介面語言:</span>
+    <button class="btn" data-lang="zh-Hant" id="btn-zh" type="button">繁體中文</button>
+    <button class="btn" data-lang="en" id="btn-en" type="button">English</button>
+  </div>
 
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <header class="header" role="banner">
+    <h1 id="app-title" data-i18n="title">文化智遊儀表板</h1>
+    <nav class="nav" aria-label="主要導覽">
+      <a href="#section-guide" class="active" data-i18n="nav_guide">導覽</a>
+      <a href="#section-kb" data-i18n="nav_knowledge">知識庫</a>
+      <a href="#section-xp" data-i18n="nav_experience">體驗</a>
+      <a href="#section-me" data-i18n="nav_personal">個人中心</a>
+    </nav>
+  </header>
 
-  <script>
-  /* === Gemini 驗證：自動偵測 v1 / v1beta 與可用模型變體 === */
-  async function listModelsDetect(key) {
-    const bases = [
-      "https://generativelanguage.googleapis.com/v1",
-      "https://generativelanguage.googleapis.com/v1beta"
-    ];
-    let lastErr;
-    for (const base of bases) {
-      try {
-        const r = await fetch(`${base}/models?key=${encodeURIComponent(key)}`);
-        if (!r.ok) {
-          lastErr = await r.text();
-          continue;
-        }
-        const data = await r.json();
-        return { base, models: data.models || [] };
-      } catch (e) {
-        lastErr = String(e);
-      }
-    }
-    throw new Error(`ListModels 失敗：${lastErr || "未知錯誤"}`);
-  }
+  <main class="grid" role="main" aria-live="polite">
+    <!-- API 整合 -->
+    <section class="panel col-12" aria-labelledby="api-h2">
+      <div class="module-header">
+        <div class="chip" aria-hidden="true"><span>API</span></div>
+        <h2 id="api-h2" data-i18n="h2_api">API 整合服務模組</h2>
+      </div>
+      <p class="module-sub" data-i18n="p_api">系統服務狀態與金鑰設定</p>
+      <div class="row" style="margin-top:.6rem">
+        <div class="col-4">
+          <label for="gemini-api" class="sr">Gemini API Key</label>
+          <input id="gemini-api" class="input" type="password" inputmode="text" autocomplete="off" placeholder="Gemini API Key" />
+        </div>
+        <div class="col-4">
+          <label for="maps-api" class="sr">Maps API</label>
+          <input id="maps-api" class="input" type="password" placeholder="Maps API" />
+        </div>
+        <div class="col-4">
+          <label for="ptx-api" class="sr">Data.gov.tw (PTX)</label>
+          <input id="ptx-api" class="input" type="password" placeholder="Data.gov.tw (PTX)" />
+        </div>
+      </div>
+      <div style="display:flex; gap:.8rem; align-items:center; justify-content:flex-end; margin-top:.8rem">
+        <span class="module-sub" style="display:inline-flex; align-items:center; gap:.4rem">
+          <span id="rag-dot" class="chip" style="background:transparent;color:var(--text);border:1px solid var(--glass-border)">RAG</span>
+          <span id="rag-text" data-i18n="status_rag">RAG 服務：尚未連線</span>
+        </span>
+        <span class="module-sub" style="display:inline-flex; align-items:center; gap:.4rem">
+          <span class="chip" style="background:transparent;color:var(--text);border:1px solid var(--glass-border)">DATA</span>
+          <span data-i18n="status_data">開放資料：同步中</span>
+        </span>
+        <button id="btn-save-api" class="btn primary" data-i18n="btn_save" type="button">儲存設定</button>
+      </div>
+    </section>
 
-  function pickFlashModel(models) {
-    const supportsGen = (m) => (m.supportedGenerationMethods || []).includes("generateContent");
-    const order = [
-      "gemini-1.5-flash-latest",
-      "gemini-1.5-flash-001",
-      "gemini-1.5-flash-8b-latest",
-      "gemini-1.5-flash-8b-001"
-    ];
-    for (const name of order) {
-      const hit = models.find(m => m.name?.endsWith(`/models/${name}`) && supportsGen(m));
-      if (hit) return { ok: true, name };
-    }
-    const family = models
-      .filter(m => /\/models\/gemini-1\.5-flash/.test(m.name || "") && supportsGen(m))
-      .map(m => m.name.split("/models/")[1]);
-    if (family.length) return { ok: true, name: family[0] };
-    return { ok: false, reason: "找不到支援 generateContent 的 gemini-1.5-flash 變體" };
-  }
+    <!-- AI 導覽 -->
+    <section id="section-guide" class="panel col-12" aria-labelledby="guide-h2">
+      <div class="module-header">
+        <div class="chip" aria-hidden="true"><span>AI</span></div>
+        <h2 id="guide-h2" data-i18n="h2_guide">AI 智能導覽</h2>
+      </div>
+      <p class="module-sub" data-i18n="p_guide">您的隨身文化嚮導</p>
+      <div id="chat" class="chat" aria-live="polite" aria-label="聊天視窗">
+        <div class="bubble ai" data-i18n="chat_init">[系統初始化] 檢測到 RAG 核心未啟動。請在上方輸入您的 Gemini Key 以連線文化知識庫。</div>
+      </div>
+      <form class="chat-input" id="chat-form" autocomplete="off">
+        <button class="btn mic" type="button" aria-label="語音輸入" title="語音輸入">🎤</button>
+        <input id="chat-input" class="input" type="text" data-i18n-placeholder="placeholder_chat" placeholder="輸入您的文化問題或導覽需求..." />
+        <button id="btn-send" class="btn primary" type="submit" data-i18n="btn_send">發送</button>
+      </form>
+    </section>
 
-  async function tryGenerateContent(base, key, modelName) {
-    const url = `${base}/models/${encodeURIComponent(modelName)}:generateContent?key=${encodeURIComponent(key)}`;
-    const body = { contents: [{ role: "user", parts: [{ text: "ping" }] }] };
-    const r = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    });
-    if (!r.ok) {
-      const text = await r.text();
-      throw new Error(`generateContent 失敗：${text}`);
-    }
-    return r.json();
-  }
+    <!-- 知識庫 -->
+    <section id="section-kb" class="panel col-12" aria-labelledby="kb-h2">
+      <div class="module-header">
+        <div class="chip" aria-hidden="true"><span>DB</span></div>
+        <h2 id="kb-h2" data-i18n="h2_db">文化知識庫</h2>
+        <button id="btn-import" class="btn" type="button" data-i18n="btn_import">↓ 匯入新資料</button>
+      </div>
+      <p class="module-sub" data-i18n="p_db">探索全台文化資產 (RAG 資料源)</p>
+      <div class="row" style="margin:.6rem 0 .8rem 0; align-items:center">
+        <div class="col-8"><input id="kb-search" class="input" type="search" data-i18n-placeholder="placeholder_search" placeholder="搜尋古蹟、文物、歷史事件..." aria-label="搜尋文化資產" /></div>
+        <div class="col-4" style="display:flex; justify-content:flex-end">
+          <div class="filters" role="toolbar" aria-label="類型篩選">
+            <button class="filter" data-filter="all" type="button" aria-pressed="true" data-i18n="filter_all">全部</button>
+            <button class="filter" data-filter="monument" type="button" aria-pressed="false" data-i18n="filter_monument">古蹟</button>
+            <button class="filter" data-filter="museum" type="button" aria-pressed="false" data-i18n="filter_museum">博物館</button>
+            <button class="filter" data-filter="intangible" type="button" aria-pressed="false" data-i18n="filter_intangible">無形文化</button>
+          </div>
+        </div>
+      </div>
+      <div id="kb-grid" class="kb-grid" aria-live="polite"></div>
+    </section>
 
-  document.getElementById("btn-save-api")?.addEventListener("click", async () => {
-    const key = (document.getElementById("gemini-api")?.value || "").trim();
-    const toast = (msg, type="default") => {
-      const t = document.getElementById("toast");
-      if (!t) return alert(msg);
-      t.textContent = msg;
-      t.className = "toast show " + type;
-      clearTimeout(t.timer);
-      t.timer = setTimeout(() => t.classList.remove("show"), 3000);
-    };
-    const setRag = (ok) => {
-      const dot = document.getElementById("rag-dot");
-      const text = document.getElementById("rag-text");
-      if (ok) {
-        dot?.classList.add("ok");
-        if (text) text.textContent = "RAG 服務：已連線";
-      } else {
-        dot?.classList.remove("ok");
-        if (text) text.textContent = "RAG 服務：尚未連線";
-      }
-    };
-
-    if (!key) {
-      toast("請先輸入 Gemini API Key。", "error");
-      return;
-    }
-
-    const isHttps = location.protocol === "https:" || ["localhost","127.0.0.1"].includes(location.hostname);
-    if (!isHttps) {
-      toast("需要在 HTTPS 或 localhost 環境執行，否則可能被瀏覽器阻擋。", "error");
-      return;
-    }
-
-    try {
-      toast("正在檢查可用模型…", "success");
-      const { base, models } = await listModelsDetect(key);
-      const pick = pickFlashModel(models);
-
-      if (!pick.ok) {
-        toast("ListModels 成功，但找不到支援 generateContent 的 gemini-1.5-flash。", "error");
-        return;
-      }
-
-      await tryGenerateContent(base, key, pick.name);
-
-      localStorage.setItem("geminiKey", key);
-      localStorage.setItem("ragReady", "true");
-      localStorage.setItem("geminiApiBase", base);
-      localStorage.setItem("geminiModel", pick.name);
-
-      setRag(true);
-      toast("✅ Gemini API Key 儲存並驗證成功！服務核心啟動。", "success");
-
-      const chat = document.getElementById("chat");
-      if (chat) {
-        const b = document.createElement("div");
-        b.className = "bubble ai";
-        b.textContent = "服務已啟動。RAG 檢索就緒，請開始提問！";
-        chat.appendChild(b);
-        chat.scrollTop = chat.scrollHeight;
-      }
-    } catch (err) {
-      const msg = String(err);
-      if (/API key not valid/i.test(msg) || /permission/i.test(msg)) {
-        toast("API Key 無效或沒有啟用 Generative Language API 權限。請到 Google AI Studio 檢查專案金鑰與 API 啟用。", "error");
-      } else if (/quota/i.test(msg) || /429/.test(msg)) {
-        toast("已達到配額或速率限制（429）。請稍後再試或在 AI Studio 提升配額。", "error");
-      } else if (/not found/i.test(msg) || /is not supported/.test(msg)) {
-        toast("模型在此 API 版本不可用，或模型名稱不支援 generateContent。已自動偵測仍失敗，請改用 gemini-1.5-flash-001 或 -latest。", "error");
-      } else {
-        toast("連線失敗：" + msg, "error");
-      }
-      localStorage.setItem("ragReady", "false");
-      setRag(false);
-    }
-  });
+    <!-- 沉浸式體驗：AR + VR -->
+    <section id="section-xp" class="panel col-12" aria-labelledby="xp-h2">
+      <div class="module-header">
+        <div class="chip" aria-hidden="true"><span>AR</span></div>
+        <h2 id="xp-h2" data-i18n="h2_immersive">沉浸式體驗</h2>
+      </div>
+      <p class="module-sub" data-i18n="p_immersive">啟動您的時光機</p>
+      <div class="xp-grid">
+        <!-- AR 卡片 1：安平古堡（示意模型） -->
+        <article class="xp-card ar-card" aria-label="AR 實景：安平古堡（示意模型）">
+          <model-viewer id="mv-anping"
+            src="https://modelviewer.dev/shared-assets/models/Astronaut.glb"
+            ios-src="https://modelviewer.dev/shared-assets/models/Astronaut.usdz"
+            alt="安平古堡示意 3D 模型"
+            ar ar-modes="webxr scene-viewer quick-look"
+            ar-scale="auto" ar-placement="floor"
+            camera-controls camera-orbit="0deg 75deg 2.2m" field-of-view="30deg"
+            environment-image="neutral" shadow-intensity="1" exposure="1"
+            interaction-prompt="auto"
+            poster="https://via.placeholder.com/800x520/331144/cccccc?text=Tap+to+Load+AR"
+            aria-label="啟動 AR 檢視">
+            <button class="hotspot" slot="hotspot-gate" data-position="0.15m 1.2m 0.2m" data-normal="0 1 0" data-anno="城門：清領時期修築"></button>
+            <div class="annotation" slot="annotation-gate">城門：清領時期修築</div>
+            <button class="hotspot" slot="hotspot-battery" data-position="-0.25m 0.9m 0.1m" data-normal="0 1 0" data-anno="砲台：荷治軍事設施"></button>
+            <div class="annotation" slot="an
   </script>
 </body>
 </html>
