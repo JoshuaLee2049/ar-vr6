@@ -1,162 +1,106 @@
+
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>文化智遊 - AI 科技儀表板（精修重構版 v2.1）</title>
+  <title>文化智遊 - AI 科技儀表板（AR/VR整合版 v3）</title>
   <meta name="color-scheme" content="dark" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root { --bg:#070718; --bg-grad-a:rgba(0,255,255,.1); --bg-grad-b:rgba(187,0,255,.1);
+      --pri:#00ffff; --sec:#bb00ff; --text:#e6f7ff; --muted:#8090a0; --glass:rgba(0,0,0,.7);
+      --glass-border:rgba(255,255,255,.06); --glow-pri:0 0 15px rgba(0,255,255,.4), 0 0 5px rgba(0,255,255,.18);
+      --glow-sec:0 0 15px rgba(187,0,255,.4), 0 0 5px rgba(187,0,255,.18); --ok:#4aff8f; --bad:#ff4a4a;
+      --radius:18px; --radius-sm:10px; --shadow-deep:0 0 30px rgba(0,0,0,.7), 0 0 20px rgba(0,255,255,.05), 0 0 40px rgba(187,0,255,.08); --space:clamp(.75rem, .75rem + 1.2vw, 2rem); }
+    *{box-sizing:border-box} html,body{height:100%}
+    body{margin:0;font-family:'Noto Sans TC',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--text);
+      background:radial-gradient(circle at 15% 15%, var(--bg-grad-a), transparent 30%), radial-gradient(circle at 85% 75%, var(--bg-grad-b), transparent 35%), linear-gradient(135deg,#070718 0%,#030018 100%);
+      background-color:var(--bg); padding:clamp(1rem,3vw,2.5rem)}
+    :focus-visible{outline:2px solid var(--pri); outline-offset:2px; border-radius:8px}
+    @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 
-  <!-- Leaflet 地圖與 CryptoJS（PTX 簽章用） -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.2.0/crypto-js.min.js" crossorigin="anonymous"></script>
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:clamp(1rem,2vw,2rem)}
+    @media (max-width:960px){.grid{grid-template-columns:1fr}}
+    .panel{background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--radius);box-shadow:var(--shadow-deep);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);padding:calc(var(--space)*1.1);transition:transform .25s ease,box-shadow .25s ease}
+    .panel:hover{transform:translateY(-2px);box-shadow:var(--glow-pri)}
+    .module-header{display:flex;align-items:center;gap:.8rem;margin-bottom:.8rem}
+    .module-header h2{margin:0;font-size:clamp(1.1rem,1rem + .8vw,1.5rem);color:var(--pri);text-shadow:0 0 6px rgba(0,255,255,.28)}
+    .module-sub{margin:0;color:var(--muted);font-size:.95rem}
+    .chip{display:inline-flex;align-items:center;gap:.4rem;font-family:'Orbitron',monospace;font-weight:700;background:linear-gradient(45deg,var(--pri),var(--sec));color:#091018;border-radius:var(--radius-sm);padding:.35rem .6rem;letter-spacing:.5px}
+    .btn{cursor:pointer;border:1.5px solid var(--pri);background:rgba(0,255,255,.06);color:var(--pri);border-radius:var(--radius-sm);padding:.55rem .9rem;font-size:.95rem;transition:.2s ease}
+    .btn:hover{box-shadow:var(--glow-pri);transform:translateY(-1px)}
+    .btn.primary{background:linear-gradient(90deg,var(--pri),#00aaff);color:#081018;border-color:transparent}
+    .input,textarea.input{width:100%;background:rgba(0,0,0,.4);color:var(--text);border:1px solid var(--glass-border);border-radius:var(--radius-sm);padding:.65rem .8rem;font-size:.95rem}
+    .row{display:grid;grid-template-columns:repeat(12,1fr);gap:.8rem}
+    .col-6{grid-column:span 6}.col-4{grid-column:span 4}.col-12{grid-column:span 12}
+    @media (max-width:960px){.col-6,.col-4{grid-column:span 12}}
+    header.header{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:var(--space)}
+    .nav{display:flex;gap:.8rem;flex-wrap:wrap}
+    .nav a{color:var(--muted);text-decoration:none;padding:.4rem .6rem;border-radius:8px}
+    .nav a.active,.nav a:hover{background:rgba(0,255,255,.08);color:var(--text)}
 
-  <!-- AR & VR 依賴（各載一次即可） -->
+    .kb-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+    @media (max-width:1200px){.kb-grid{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width:720px){.kb-grid{grid-template-columns:1fr}}
+    .kb-card{overflow:hidden;border-radius:16px;border:1px solid var(--glass-border);background:rgba(255,255,255,.02)}
+    .kb-card img{width:100%;display:block;object-fit:cover;aspect-ratio:16/9;height:auto}
+    .kb-card .content{padding:.8rem .9rem}
+    .kb-card h4{margin:0 0 .25rem 0;font-size:1.05rem}
+    .filters{display:flex;gap:.6rem;flex-wrap:wrap}
+    .filter{padding:.35rem .6rem;border:1px solid var(--glass-border);border-radius:999px;color:var(--muted);cursor:pointer}
+    .filter.active{border-color:var(--pri);color:var(--text);box-shadow:var(--glow-pri)}
+
+    .chat{display:flex;flex-direction:column;gap:.6rem;height:clamp(220px,35vh,360px);overflow:auto;background:rgba(255,255,255,.02);border-radius:12px;padding:.8rem;border:1px solid var(--glass-border)}
+    .bubble{max-width:88%;padding:.6rem .8rem;border-radius:14px}
+    .bubble.ai{background:rgba(0,255,255,.08);border:1px solid rgba(0,255,255,.2)}
+    .bubble.user{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);margin-left:auto}
+    .chat-input{display:flex;gap:.5rem;margin-top:.6rem}
+    .chat-input .mic{width:2.25rem}
+    .status{display:inline-flex;align-items:center;gap:.4rem;font-size:.92rem;color:var(--muted)}
+    .dot{width:.55rem;height:.55rem;border-radius:50%;background:#666;box-shadow:inset 0 0 0 2px rgba(0,0,0,.3)}
+    .dot.ok{background:var(--ok)}
+
+    .xp-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem}
+    @media (max-width:960px){.xp-grid{grid-template-columns:1fr}}
+    .xp-card{position:relative;overflow:hidden;border-radius:16px;border:1px solid var(--glass-border)}
+    .xp-card img{width:100%;display:block;object-fit:cover;aspect-ratio:16/9;height:auto}
+    .xp-overlay{position:absolute;inset:auto 0 0 0;padding:.9rem;background:linear-gradient(180deg,transparent,rgba(0,0,0,.65))}
+    .tag{display:inline-block;padding:.3rem .5rem;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.12);border-radius:8px;margin-bottom:.4rem}
+
+    .ar-card model-viewer{width:100%;height:min(520px,60vh);background:rgba(0,0,0,.15)}
+    .hotspot{--size:14px;width:var(--size);height:var(--size);border-radius:999px;border:2px solid rgba(255,255,255,.9);background:rgba(0,255,255,.9);box-shadow:var(--glow-pri)}
+    .annotation{position:absolute;transform:translate(-50%,calc(-100% - 10px));padding:.35rem .55rem;background:rgba(0,0,0,.75);border:1px solid var(--glass-border);border-radius:8px;color:#e6f7ff;font-size:.85rem;white-space:nowrap;pointer-events:none}
+
+    .vr-card .vr-wrap{width:100%;height:min(520px,60vh);background:rgba(0,0,0,.15);border:1px solid var(--glass-border);border-radius:12px;overflow:hidden}
+    .vr-card .vr-wrap canvas{display:block}
+
+    .collapsible{cursor:pointer;position:relative}
+    .collapsible .caret{margin-left:auto;font-size:.9rem;opacity:.9}
+    .section-body{margin-top:.6rem;display:block}
+    .section-body[hidden]{display:none}
+
+    .modal{position:fixed;inset:0;display:none;place-items:center;background:rgba(0,0,0,.82);backdrop-filter:blur(5px);z-index:1000}
+    .modal[open]{display:grid}
+    .modal-card{width:min(600px,92vw);background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--radius);padding:1.1rem;box-shadow:var(--glow-pri)}
+    .modal-head{display:flex;align-items:center;justify-content:space-between;gap:.6rem;padding-bottom:.6rem;border-bottom:2px solid var(--sec)}
+    .modal-actions{display:flex;gap:.6rem;justify-content:flex-end;margin-top:.8rem}
+
+    .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%) translateY(120%);background:rgba(0,0,0,.85);color:#fff;padding:.6rem .9rem;border-radius:10px;border:1px solid var(--glass-border);transition:transform .28s ease;z-index:1200;white-space:pre-wrap}
+    .toast.show{transform:translateX(-50%) translateY(0)}
+    .toast.success{box-shadow:0 0 0 2px rgba(74,255,143,.2)}
+    .toast.error{box-shadow:0 0 0 2px rgba(255,74,74,.2)}
+  </style>
   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js" crossorigin="anonymous"></script>
-
-  <style>
-    /* =============================
-       主題與設計系統
-       ============================= */
-    :root {
-      --bg: #070718;
-      --bg-grad-a: rgba(0, 255, 255, 0.1);
-      --bg-grad-b: rgba(187, 0, 255, 0.1);
-      --pri: #00ffff;
-      --pri-2: #00aaff;
-      --sec: #bb00ff;
-      --text: #e6f7ff;
-      --muted: #8090a0;
-      --glass: rgba(0, 0, 0, 0.7);
-      --glass-2: rgba(255,255,255,.02);
-      --glass-border: rgba(255, 255, 255, 0.08);
-      --glow-pri: 0 0 15px rgba(0, 255, 255, 0.4), 0 0 5px rgba(0, 255, 255, 0.18);
-      --glow-sec: 0 0 15px rgba(187, 0, 255, 0.4), 0 0 5px rgba(187, 0, 255, 0.18);
-      --ok: #4aff8f;
-      --bad: #ff4a4a;
-      --radius: 18px;
-      --radius-sm: 10px;
-      --shadow-deep: 0 0 30px rgba(0,0,0,.6), 0 0 20px rgba(0,255,255,.05), 0 0 40px rgba(187,0,255,.08);
-      --space: clamp(.75rem, .75rem + 1.2vw, 2rem);
-      --space-sm: .6rem;
-      --space-md: .9rem;
-    }
-
-    * { box-sizing: border-box; }
-    html, body { height: 100%; }
-    body {
-      margin: 0;
-      font-family: 'Noto Sans TC', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-      color: var(--text);
-      background:
-        radial-gradient(circle at 15% 15%, var(--bg-grad-a), transparent 30%),
-        radial-gradient(circle at 85% 75%, var(--bg-grad-b), transparent 35%),
-        linear-gradient(135deg, #070718 0%, #030018 100%);
-      background-color: var(--bg);
-      padding: clamp(1rem, 3vw, 2.5rem);
-      line-height: 1.6;
-      text-rendering: optimizeLegibility;
-    }
-
-    /* 可訪問性 */
-    :focus-visible { outline: 2px solid var(--pri); outline-offset: 2px; border-radius: 8px; }
-    @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
-    .sr, .sr-only { position: absolute !important; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
-
-    /* Layout & 基礎元件 */
-    header.header { display:flex; align-items:center; justify-content:space-between; gap: 1rem; margin-bottom: var(--space); }
-    .nav { display:flex; gap:.8rem; flex-wrap: wrap; }
-    .nav a { color: var(--muted); text-decoration: none; padding: .4rem .6rem; border-radius: 8px; }
-    .nav a.active, .nav a:hover { background: rgba(0,255,255,.08); color: var(--text); }
-
-    .grid { display:grid; grid-template-columns: repeat(12, 1fr); gap: clamp(1rem, 2vw, 2rem); }
-    @media (max-width: 960px) { .grid { grid-template-columns: 1fr; } }
-
-    .panel {
-      background: var(--glass);
-      border: 1px solid var(--glass-border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow-deep);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      padding: calc(var(--space) * 1.1);
-      transition: transform .25s ease, box-shadow .25s ease;
-      contain: content;
-    }
-    .panel:hover { transform: translateY(-2px); box-shadow: var(--glow-pri); }
-
-    .row { display:grid; grid-template-columns: repeat(12, 1fr); gap: .8rem; }
-    .col-4 { grid-column: span 4; }
-    .col-6 { grid-column: span 6; }
-    .col-12 { grid-column: span 12; }
-    @media (max-width: 960px) { .col-4, .col-6 { grid-column: span 12; } }
-
-    .module-header { display:flex; align-items:center; gap:.8rem; margin-bottom:.8rem; }
-    .module-header h2 { margin:0; font-size: clamp(1.1rem, 1rem + .8vw, 1.5rem); color: var(--pri); text-shadow: 0 0 6px rgba(0,255,255,.28); }
-    .module-sub { margin:0; color: var(--muted); font-size:.95rem; }
-
-    .chip { display:inline-flex; align-items:center; gap:.4rem; font-family:'Orbitron', monospace; font-weight:700; background: linear-gradient(45deg, var(--pri), var(--sec)); color:#091018; border-radius: var(--radius-sm); padding:.35rem .6rem; letter-spacing:.5px; user-select:none; }
-    .btn { cursor:pointer; border:1.5px solid var(--pri); background:rgba(0,255,255,.06); color:var(--pri); border-radius:var(--radius-sm); padding:.55rem .9rem; font-size:.95rem; transition:.2s ease; }
-    .btn:hover { box-shadow:var(--glow-pri); transform:translateY(-1px); }
-    .btn.primary { background: linear-gradient(90deg, var(--pri), var(--pri-2)); color:#081018; border-color: transparent; }
-    .btn.icon { width:2.35rem; display:inline-grid; place-items:center; }
-
-    .input, textarea.input { width:100%; background:rgba(0,0,0,.4); color:var(--text); border:1px solid var(--glass-border); border-radius:var(--radius-sm); padding:.65rem .8rem; font-size:.95rem; }
-
-    /* 卡片區 */
-    .kb-grid { display:grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
-    @media (max-width: 1200px) { .kb-grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 720px) { .kb-grid { grid-template-columns: 1fr; } }
-    .kb-card { overflow:hidden; border-radius:16px; border:1px solid var(--glass-border); background:var(--glass-2); content-visibility:auto; contain-intrinsic-size:340px; }
-    .kb-card img { width:100%; display:block; object-fit:cover; aspect-ratio:16/9; height:auto; }
-    .kb-card .content { padding:.8rem .9rem; }
-    .kb-card h4 { margin:0 0 .25rem 0; font-size:1.05rem; }
-
-    .filters { display:flex; gap:.6rem; flex-wrap:wrap; }
-    .filter { padding:.35rem .6rem; border:1px solid var(--glass-border); border-radius:999px; color:var(--muted); cursor:pointer; background:transparent; }
-    .filter[aria-pressed="true"], .filter.active { border-color:var(--pri); color:var(--text); box-shadow:var(--glow-pri); }
-
-    /* Chat 區 */
-    .chat { display:flex; flex-direction:column; gap:.6rem; height:clamp(220px,35vh,360px); overflow:auto; background:var(--glass-2); border-radius:12px; padding:.8rem; border:1px solid var(--glass-border); }
-    .bubble { max-width:88%; padding:.6rem .8rem; border-radius:14px; white-space:pre-wrap; }
-    .bubble.ai { background:rgba(0,255,255,.08); border:1px solid rgba(0,255,255,.2); }
-    .bubble.user { background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); margin-left:auto; }
-    .chat-input { display:flex; gap:.5rem; margin-top:.6rem; }
-    .status { display:inline-flex; align-items:center; gap:.4rem; font-size:.92rem; color:var(--muted); }
-    .dot { width:.55rem; height:.55rem; border-radius:50%; background:#666; box-shadow: inset 0 0 0 2px rgba(0,0,0,.3); }
-    .dot.ok { background:var(--ok); }
-
-    /* 沉浸式卡 */
-    .xp-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:1rem; }
-    @media (max-width:960px){ .xp-grid{ grid-template-columns:1fr; } }
-    .xp-card{ position:relative; overflow:hidden; border-radius:16px; border:1px solid var(--glass-border); }
-    .xp-card img{ width:100%; display:block; object-fit:cover; aspect-ratio:16/9; height:auto; }
-    .xp-overlay{ position:absolute; inset:auto 0 0 0; padding:.9rem; background:linear-gradient(180deg,transparent,rgba(0,0,0,.65)); }
-    .tag{ display:inline-block; padding:.3rem .5rem; background:rgba(0,0,0,.45); border:1px solid rgba(255,255,255,.12); border-radius:8px; margin-bottom:.4rem; }
-
-    /* AR / model-viewer 尺寸與熱點樣式 */
-    .ar-card model-viewer { width:100%; height:min(520px,60vh); background:rgba(0,0,0,.15); }
-    .hotspot{ --size:14px; width:var(--size); height:var(--size); border-radius:999px; border:2px solid rgba(255,255,255,.9); background:rgba(0,255,255,.9); box-shadow:var(--glow-pri); }
-    .annotation{ position:absolute; transform:translate(-50%,calc(-100% - 10px)); padding:.35rem .55rem; background:rgba(0,0,0,.75); border:1px solid var(--glass-border); border-radius:8px; color:#e6f7ff; font-size:.85rem; white-space:nowrap; pointer-events:none; }
-
-    /* VR */
-    .vr-card .vr-wrap{ width:100%; height:min(520px,60vh); background:rgba(0,0,0,.15); border:1px solid var(--glass-border); border-radius:12px; overflow:hidden; }
-    .vr-card .vr-wrap canvas{ display:block; }
-
-    /* Leaflet 地圖尺寸 */
-    #map { height: min(360px, 50vh); border:1px solid var(--glass-border); border-radius:12px; }
-  </style>
 </head>
 <body>
-  <!-- 語言切換 -->
   <div class="lang-switch" style="display:flex; gap:.5rem; align-items:center; margin-bottom:.6rem;">
     <span style="color:var(--text); font-size:.9rem" data-key="ui_lang">介面語言:</span>
-    <button class="btn" data-lang="zh-Hant" id="btn-zh" aria-pressed="false">繁體中文</button>
-    <button class="btn" data-lang="en" id="btn-en" aria-pressed="false">English</button>
+    <button class="btn" data-lang="zh-Hant" id="btn-zh">繁體中文</button>
+    <button class="btn" data-lang="en" id="btn-en">English</button>
   </div>
 
   <header class="header" role="banner">
@@ -170,14 +114,12 @@
   </header>
 
   <main class="grid" role="main" aria-live="polite">
-    <!-- API 模組 -->
     <section class="panel col-12" aria-labelledby="api-h2">
       <div class="module-header">
         <div class="chip" aria-hidden="true"><span>API</span></div>
         <h2 id="api-h2" data-key="h2_api">API 整合服務模組</h2>
       </div>
       <p class="module-sub" data-key="p_api">系統服務狀態與金鑰設定</p>
-
       <div class="row" style="margin-top:.6rem">
         <div class="col-4">
           <label for="gemini-api" class="sr">Gemini API Key</label>
@@ -185,14 +127,13 @@
         </div>
         <div class="col-4">
           <label for="maps-api" class="sr">Maps API</label>
-          <input id="maps-api" class="input" type="password" placeholder="Maps API" autocomplete="off" />
+          <input id="maps-api" class="input" type="password" placeholder="Maps API" />
         </div>
         <div class="col-4">
           <label for="ptx-api" class="sr">Data.gov.tw (PTX)</label>
-          <input id="ptx-api" class="input" type="password" placeholder="Data.gov.tw (PTX)" autocomplete="off" />
+          <input id="ptx-api" class="input" type="password" placeholder="Data.gov.tw (PTX)" />
         </div>
       </div>
-
       <div style="display:flex; gap:.8rem; align-items:center; justify-content:flex-end; margin-top:.8rem">
         <span class="status"><span id="rag-dot" class="dot" aria-hidden="true"></span><span id="rag-text" data-key="status_rag">RAG 服務：尚未連線</span></span>
         <span class="status"><span class="dot ok" aria-hidden="true"></span><span data-key="status_data">開放資料：同步中</span></span>
@@ -200,72 +141,64 @@
       </div>
     </section>
 
-    <!-- 導覽 -->
     <section id="section-guide" class="panel col-12" aria-labelledby="guide-h2">
       <div class="module-header">
         <div class="chip" aria-hidden="true"><span>AI</span></div>
         <h2 id="guide-h2" data-key="h2_guide">AI 智能導覽</h2>
       </div>
       <p class="module-sub" data-key="p_guide">您的隨身文化嚮導</p>
-
       <div id="chat" class="chat" aria-live="polite" aria-label="聊天視窗">
         <div class="bubble ai" data-key="chat_init">[系統初始化] 檢測到 RAG 核心未啟動。請在上方輸入您的 Gemini Key 以連線文化知識庫。</div>
       </div>
       <div class="chat-input">
-        <button class="btn icon" type="button" aria-label="語音輸入" title="語音輸入">🎤</button>
-        <input id="chat-input" class="input" type="text" data-key="placeholder_chat" placeholder="輸入您的文化問題或導覽需求..." aria-label="輸入問題" />
+        <button class="btn mic" type="button" aria-label="語音輸入">🎤</button>
+        <input id="chat-input" class="input" type="text" data-key="placeholder_chat" placeholder="輸入您的文化問題或導覽需求..." />
         <button id="btn-send" class="btn primary" type="button" data-key="btn_send">發送</button>
       </div>
     </section>
 
-    <!-- 知識庫 -->
     <section id="section-kb" class="panel col-12" aria-labelledby="kb-h2">
       <div class="module-header">
         <div class="chip" aria-hidden="true"><span>DB</span></div>
         <h2 id="kb-h2" data-key="h2_db">文化知識庫</h2>
-        <button id="btn-import" class="btn" type="button" data-key="btn_import" aria-haspopup="dialog" aria-controls="import-modal">↓ 匯入新資料</button>
+        <button id="btn-import" class="btn" type="button" data-key="btn_import">↓ 匯入新資料</button>
       </div>
       <p class="module-sub" data-key="p_db">探索全台文化資產 (RAG 資料源)</p>
-
       <div class="row" style="margin:.6rem 0 .8rem 0; align-items:center">
-        <div class="col-6">
-          <label class="sr" for="kb-search">搜尋文化資產</label>
-          <input id="kb-search" class="input" type="text" data-key="placeholder_search" placeholder="搜尋古蹟、文物、歷史事件..." autocomplete="off" />
-        </div>
-        <div class="col-6" style="display:flex; justify-content:flex-end">
-          <div class="filters" role="toolbar" aria-label="類型篩選">
-            <button class="filter active" data-filter="all" data-key="filter_all" aria-pressed="true">全部</button>
-            <button class="filter" data-filter="monument" data-key="filter_monument" aria-pressed="false">古蹟</button>
-            <button class="filter" data-filter="museum" data-key="filter_museum" aria-pressed="false">博物館</button>
-            <button class="filter" data-filter="intangible" data-key="filter_intangible" aria-pressed="false">無形文化</button>
-          </div>
-        </div>
+        <div class="col-6"><input id="kb-search" class="input" type="text" data-key="placeholder_search" placeholder="搜尋古蹟、文物、歷史事件..." /></div>
+        <div class="col-6" style="display:flex; justify-content:flex-end"><div class="filters" role="tablist" aria-label="類型篩選">
+          <button class="filter active" data-filter="all" data-key="filter_all" role="tab" aria-selected="true">全部</button>
+          <button class="filter" data-filter="monument" data-key="filter_monument" role="tab">古蹟</button>
+          <button class="filter" data-filter="museum" data-key="filter_museum" role="tab">博物館</button>
+          <button class="filter" data-filter="intangible" data-key="filter_intangible" role="tab">無形文化</button>
+        </div></div>
       </div>
-
       <div id="kb-grid" class="kb-grid" aria-live="polite"></div>
     </section>
 
-    <!-- 沉浸式體驗（AR×2 + VR×1） -->
     <section id="section-xp" class="panel col-12" aria-labelledby="xp-h2">
       <div class="module-header">
         <div class="chip" aria-hidden="true"><span>AR</span></div>
         <h2 id="xp-h2" data-key="h2_immersive">沉浸式體驗</h2>
       </div>
       <p class="module-sub" data-key="p_immersive">啟動您的時光機</p>
-
       <div class="xp-grid">
-        <!-- AR Demo 1：安平古堡（示意） -->
         <article class="xp-card ar-card" aria-label="AR 實景：安平古堡（示意模型）">
-          <model-viewer src="https://modelviewer.dev/shared-assets/models/Astronaut.glb"
-                        ios-src="https://modelviewer.dev/shared-assets/models/Astronaut.usdz"
-                        alt="安平古堡示意 3D 模型"
-                        ar ar-modes="webxr scene-viewer quick-look"
-                        camera-controls
-                        environment-image="neutral"
-                        shadow-intensity="1"
-                        exposure="1"
-                        poster="https://via.placeholder.com/800x520/331144/cccccc?text=Tap+to+Load+AR"
-                        aria-label="啟動 AR 檢視">
+          <model-viewer id="mv-anping"
+            src="https://modelviewer.dev/shared-assets/models/Astronaut.glb"
+            ios-src="https://modelviewer.dev/shared-assets/models/Astronaut.usdz"
+            alt="安平古堡示意 3D 模型"
+            ar ar-modes="webxr scene-viewer quick-look"
+            ar-scale="auto" ar-placement="floor"
+            camera-controls camera-orbit="0deg 75deg 2.2m" field-of-view="30deg"
+            environment-image="neutral" shadow-intensity="1" exposure="1"
+            interaction-prompt="auto"
+            poster="https://via.placeholder.com/800x520/331144/cccccc?text=Tap+to+Load+AR"
+            aria-label="啟動 AR 檢視">
+            <button class="hotspot" slot="hotspot-gate" data-position="0.15m 1.2m 0.2m" data-normal="0 1 0" data-anno="城門：清領時期修築"></button>
+            <div class="annotation" slot="annotation-gate">城門：清領時期修築</div>
+            <button class="hotspot" slot="hotspot-battery" data-position="-0.25m 0.9m 0.1m" data-normal="0 1 0" data-anno="砲台：荷治軍事設施"></button>
+            <div class="annotation" slot="annotation-battery">砲台：荷治軍事設施</div>
             <button slot="ar-button" class="btn primary" style="position:absolute; left:1rem; bottom:1rem">在實境中查看</button>
           </model-viewer>
           <div class="xp-overlay">
@@ -274,17 +207,15 @@
           </div>
         </article>
 
-        <!-- AR Demo 2：台北城牆（示意） -->
         <article class="xp-card ar-card" aria-label="AR 實景：台北城牆（示意模型）">
-          <model-viewer src="https://modelviewer.dev/shared-assets/models/RobotExpressive.glb"
-                        ios-src="https://modelviewer.dev/shared-assets/models/RobotExpressive.usdz"
-                        alt="台北城牆示意 3D 模型"
-                        ar ar-modes="webxr scene-viewer quick-look"
-                        camera-controls
-                        environment-image="neutral"
-                        shadow-intensity="1"
-                        poster="https://via.placeholder.com/800x520/113333/cccccc?text=Tap+to+Load+AR"
-                        aria-label="啟動 AR 檢視">
+          <model-viewer
+            src="https://modelviewer.dev/shared-assets/models/RobotExpressive.glb"
+            ios-src="https://modelviewer.dev/shared-assets/models/RobotExpressive.usdz"
+            alt="台北城牆示意 3D 模型"
+            ar ar-modes="webxr scene-viewer quick-look"
+            camera-controls environment-image="neutral" shadow-intensity="1"
+            poster="https://via.placeholder.com/800x520/113333/cccccc?text=Tap+to+Load+AR"
+            aria-label="啟動 AR 檢視">
             <button slot="ar-button" class="btn primary" style="position:absolute; left:1rem; bottom:1rem">在實境中查看</button>
           </model-viewer>
           <div class="xp-overlay">
@@ -293,7 +224,6 @@
           </div>
         </article>
 
-        <!-- VR Demo：360° 虛擬展館（A-Frame） -->
         <article class="xp-card vr-card" aria-label="VR 虛擬展館：360 全景示意">
           <div class="vr-wrap">
             <a-scene embedded background="color: #000">
@@ -314,7 +244,6 @@
       </div>
     </section>
 
-    <!-- 在地即時資訊 -->
     <section class="panel col-12" aria-labelledby="local-h2">
       <div id="local-toggle" class="module-header collapsible" role="button" tabindex="0" aria-expanded="true">
         <div class="chip" aria-hidden="true"><span>GPS</span></div>
@@ -323,29 +252,26 @@
         <span class="caret" aria-hidden="true">▼</span>
       </div>
       <div id="local-body" class="section-body">
-        <div role="region" aria-label="互動地圖" style="border:1px dashed rgba(255,255,255,.18); border-radius:12px; padding:.9rem; text-align:center; margin-bottom:.8rem">
-          <div id="map" role="application" aria-label="互動地圖"></div>
-        </div>
+        <div role="region" aria-label="互動地圖" style="border:1px dashed rgba(255,255,255,.18); border-radius:12px; padding:.9rem; text-align:center; margin-bottom:.8rem" data-key="map_placeholder">--- 互動地圖載入區域 ---</div>
         <ul style="list-style:none; padding:0; margin:0; display:grid; gap:.6rem">
           <li class="kb-card" style="display:flex; gap:.7rem; align-items:center; padding:.7rem;">
             <div class="chip" aria-hidden="true">BUS</div>
             <div>
-              <h5 style="margin:.1rem 0" id="bus_route" data-key="bus_route">[市區公車] 77路</h5>
-              <p style="margin:0; color:var(--muted)" id="bus_status" data-key="bus_status">即將抵達：赤崁樓站 (3 分鐘)</p>
+              <h5 style="margin:.1rem 0" data-key="bus_route">[市區公車] 77路</h5>
+              <p style="margin:0; color:var(--muted)" data-key="bus_status">即將抵達：赤崁樓站 (3 分鐘)</p>
             </div>
           </li>
           <li class="kb-card" style="display:flex; gap:.7rem; align-items:center; padding:.7rem;">
             <div class="chip" aria-hidden="true">EVT</div>
             <div>
-              <h5 style="margin:.1rem 0" id="event_name" data-key="event_name">[節慶活動] 府城文化節</h5>
-              <p style="margin:0; color:var(--muted)" id="event_status" data-key="event_status">進行中：孔廟園區 (距離 1.2km)</p>
+              <h5 style="margin:.1rem 0" data-key="event_name">[節慶活動] 府城文化節</h5>
+              <p style="margin:0; color:var(--muted)" data-key="event_status">進行中：孔廟園區 (距離 1.2km)</p>
             </div>
           </li>
         </ul>
       </div>
     </section>
 
-    <!-- 個人化中心 -->
     <section id="section-me" class="panel col-12" aria-labelledby="me-h2">
       <div id="me-toggle" class="module-header collapsible" role="button" tabindex="0" aria-expanded="true">
         <div class="chip" aria-hidden="true"><span>USR</span></div>
@@ -372,7 +298,6 @@
     </section>
   </main>
 
-  <!-- 匯入 Modal -->
   <dialog id="import-modal" class="modal" aria-labelledby="import-title" aria-modal="true">
     <div class="modal-card" role="document">
       <div class="modal-head">
@@ -408,7 +333,7 @@
 
   <template id="kb-card-tpl">
     <article class="kb-card" data-id="">
-      <img src="" alt="" loading="lazy" decoding="async" />
+      <img src="" alt="" />
       <div class="content">
         <h4 class="title"></h4>
         <p class="meta" style="margin:.2rem 0; color:var(--muted)"></p>
@@ -416,276 +341,181 @@
     </article>
   </template>
 
-  <!-- === App Core（RAG/KB/UI） === -->
-  <script defer>
-  (function () {
+  <script>
+  (function(){
     'use strict';
     const $ = (sel, root=document) => root.querySelector(sel);
     const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
 
-    /* i18n 字典（略，與你提供一致） */
-    <script>
-(function(){
-  'use strict';
-  const $ = (sel, root=document) => root.querySelector(sel);
-  const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
-
-  // ===== i18n（沿用你原本的字典） =====
-  const i18n = {
-    'zh-Hant': {
-      ui_lang:'介面語言:', title:'文化智遊儀表板', nav_guide:'導覽', nav_knowledge:'知識庫', nav_experience:'體驗', nav_personal:'個人中心',
-      h2_api:'API 整合服務模組', p_api:'系統服務狀態與金鑰設定', status_rag:'RAG 服務：尚未連線', status_data:'開放資料：同步中', btn_save:'儲存設定',
-      h2_guide:'AI 智能導覽', p_guide:'您的隨身文化嚮導',
-      chat_init:'[系統初始化] 檢測到 RAG 核心未啟動。請在上方輸入您的 Gemini Key 以連線文化知識庫。',
-      placeholder_chat:'輸入您的文化問題或導覽需求...', btn_send:'發送',
-      h2_db:'文化知識庫', p_db:'探索全台文化資產 (RAG 資料源)', btn_import:'↓ 匯入新資料',
-      placeholder_search:'搜尋古蹟、文物、歷史事件...', filter_all:'全部', filter_monument:'古蹟', filter_museum:'博物館', filter_intangible:'無形文化',
-      h2_immersive:'沉浸式體驗', p_immersive:'啟動您的時光機', tag_ar:'AR 實景還原', h4_anping:'安平古堡：熱蘭遮城 1632', tag_vr:'VR 虛擬展館', h4_taipei:'已消失的台北城牆 (數位重建)',
-      h2_local:'在地即時資訊', p_local:'整合開放資料', map_placeholder:'--- 互動地圖載入區域 ---',
-      bus_route:'[市區公車] 77路', bus_status:'即將抵達：赤崁樓站 (3 分鐘)', event_name:'[節慶活動] 府城文化節', event_status:'進行中：孔廟園區 (距離 1.2km)',
-      h2_personal:'個人化中心', p_personal:'您的文化足跡', card_fav:'我的收藏', card_fav_p:'您已收藏 12 個景點與 3 篇導覽', card_trip:'我的行程', card_trip_p:'您有 1 個即將到來的行程 (台南三日遊)', card_ach:'我的成就', card_ach_p:'已解鎖「府城探索者」徽章',
-      modal_title:'匯入自定義文化資產', modal_label_name:'資產名稱 (必填)', modal_label_location:'地點 / 縣市 (必填)', modal_label_type:'類型 (古蹟/博物館/無形文化...)', modal_label_img:'圖片 URL (選填)', modal_label_desc:'簡要描述 (用於 AI 導覽 RAG)',
-      modal_h4_csv:'或：批次匯入 CSV 資料', btn_ai_summarize:'🤖 AI 自動摘要 (模擬)', btn_cancel:'取消', btn_submit:'單筆匯入並啟用', btn_import_csv:'批次匯入 CSV',
-      toast_lang_switched: (isZh)=>`介面已切換為 ${isZh?'繁體中文':'English'}（已儲存）`,
-      toast_key_ok:'Gemini API Key 儲存並驗證成功！服務核心啟動。',
-      toast_key_bad:'Gemini API Key 格式錯誤或無效。',
-      toast_need_key:'請先在 API 設定模組中輸入有效的 Gemini Key。',
-      toast_import_error:'請填寫「資產名稱」與「地點」。',
-      toast_import_ok:(name)=>`成功匯入資產：「${name}」。已加入 RAG 資料源。`,
-      toast_ai_summarizing:'AI 摘要處理中...', toast_ai_summarize_ok:'摘要完成！已回填至描述欄位。',
-      toast_import_csv_error:'CSV 匯入失敗，請檢查檔案和格式 (需包含 title, location 欄位)。',
-      toast_import_csv_ok:(count)=>`成功匯入 ${count} 筆資產。已加入 RAG 資料源。`,
-    },
-    en: {
-      ui_lang:'Language:', title:'Culture Guide Dashboard', nav_guide:'Guide', nav_knowledge:'Knowledge Base', nav_experience:'Experience', nav_personal:'Personal Center',
-      h2_api:'API Integration Module', p_api:'System Status and Key Settings', status_rag:'RAG Service: Disconnected', status_data:'Open Data: Syncing', btn_save:'Save Settings',
-      h2_guide:'AI Smart Guide', p_guide:'Your Personal Culture Companion',
-      chat_init:'[System Init] RAG Core Offline. Please enter your Gemini Key above to connect the Knowledge Base.',
-      placeholder_chat:'Enter your culture question or guidance request...', btn_send:'Send',
-      h2_db:"Cultural Knowledge Base", p_db:"Explore Taiwan's Cultural Assets (RAG Source)", btn_import:'↓ Import New Data',
-      placeholder_search:'Search: Monuments, artifacts, history...', filter_all:'ALL', filter_monument:'Monuments', filter_museum:'Museums', filter_intangible:'Intangible',
-      h2_immersive:'Immersive Experience', p_immersive:'Launch Your Time Machine', tag_ar:'AR Live Restoration', h4_anping:'Anping Fort: Zeelandia 1632', tag_vr:'VR Virtual Exhibition', h4_taipei:'Lost Taipei City Walls (Digital)',
-      h2_local:'Local Real-Time Info', p_local:'Open Data Integration', map_placeholder:'--- Interactive Map Loading Area ---',
-      bus_route:'[TRANSIT] Route 77', bus_status:'Arriving: Chikan Tower (3 min)', event_name:'[EVENT] Fucheng Culture Fest', event_status:'Active: Confucius Temple (1.2km)',
-      h2_personal:'Personal Center', p_personal:'Your Cultural Footprint', card_fav:'My Favorites', card_fav_p:'12 assets and 3 tours saved.', card_trip:'My Trips', card_trip_p:'1 upcoming itinerary (Tainan 3-Day)', card_ach:'My Achievements', card_ach_p:"Achieved: 'Fucheng Explorer' Badge",
-      modal_title:'Import Custom Cultural Asset', modal_label_name:'Asset Name (Required)', modal_label_location:'Location / City (Required)', modal_label_type:'Type (Monument/Museum/Intangible...)', modal_label_img:'Image URL (Optional)', modal_label_desc:'Brief Description (for RAG)', modal_h4_csv:'OR: Batch Import CSV Data', btn_ai_summarize:'🤖 AI Auto Summarize (Simulated)', btn_cancel:'Cancel', btn_submit:'Import Single Asset', btn_import_csv:'Import CSV Batch',
-      toast_lang_switched:(isZh)=>`Language switched to ${isZh?'繁體中文':'English'} (saved)`,
-      toast_key_ok:'Gemini API Key validated! Service core started.',
-      toast_key_bad:'Gemini API Key error or invalid.',
-      toast_need_key:'Please enter a valid Gemini Key in API settings first.',
-      toast_import_error:'Please fill Asset Name & Location.',
-      toast_import_ok:(name)=>`Imported: "${name}". Added to RAG source.`,
-      toast_ai_summarizing:'AI summarizing in progress...', toast_ai_summarize_ok:'Summarization complete! Result filled into description.',
-      toast_import_csv_error:'CSV import failed. Check file and format (requires title, location columns).',
-      toast_import_csv_ok:(count)=>`Successfully imported ${count} assets. Added to RAG source.`,
-    }
-  };
-
-  // ===== App 狀態與常數 =====
-  const GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
-  const state = {
-    lang: localStorage.getItem('lang') || 'zh-Hant',
-    ragReady: localStorage.getItem('ragReady') === 'true',
-    geminiKey: localStorage.getItem('geminiKey') || '',
-    knowledge: [],
-    filter: 'all',
-    search: ''
-  };
-
-  const DEFAULT_KB = [
-    { id:'1', type:'monument',  title_zh:'赤崁樓', info_zh:'台南市 / 一級古蹟', title_en:'Chikan Tower', info_en:'Tainan / Grade 1 Monument', img_url:'https://via.placeholder.com/640x360/222233/aaaaaa?text=Chikan+Tower', desc:'赤崁樓始建於 1653 年，為荷蘭人所建，歷經清朝重建與日治時期修繕，是台南最具代表性的古蹟之一。' },
-    { id:'2', type:'museum',    title_zh:'西門紅樓', info_zh:'台北市 / 歷史建築', title_en:'Ximen Red House', info_en:'Taipei / Historical Building', img_url:'https://via.placeholder.com/640x360/222233/aaaaaa?text=Red+House', desc:'西門紅樓是一座兩層高的紅磚洋樓，見證了西門町的歷史發展。' },
-    { id:'3', type:'intangible',title_zh:'媽祖繞境', info_zh:'中台灣 / 無形文化', title_en:'Mazu Pilgrimage', info_en:'Central Taiwan / Intangible Heritage', img_url:'https://via.placeholder.com/640x360/222233/aaaaaa?text=Mazu+Pilgrimage', desc:'中元普渡民俗與宗教文化的代表活動之一，強調對先人敬意與社群連結。' }
-  ];
-
-  // ===== DOM 參照 =====
-  const ragDot = $('#rag-dot'); const ragText=$('#rag-text'); const btnSaveAPI=$('#btn-save-api'); const inputGemini=$('#gemini-api');
-  const btnZh=$('#btn-zh'); const btnEn=$('#btn-en');
-  const kbGrid=$('#kb-grid'); const kbTpl=$('#kb-card-tpl'); const kbSearch=$('#kb-search'); const filterButtons=$$('.filter');
-  const chatBox=$('#chat'); const chatInput=$('#chat-input'); const btnSend=$('#btn-send');
-  const toaster=$('#toast');
-
-  // ===== 初始化 =====
-  function init(){
-    inputGemini.value = state.geminiKey;
-    setRagUI(state.ragReady);
-    applyLang(state.lang);
-    loadKnowledge(); renderKB();
-    bindEvents();
-    if (state.ragReady){
-      chatBox.innerHTML = '';
-      addBubble('ai', t('chat_init').replace('未啟動','已於上次連線時啟動'));
-    }
-  }
-
-  // ===== 工具 =====
-  function t(key){ const lang = state.lang in i18n ? state.lang : 'zh-Hant'; const val = i18n[lang][key]; return (typeof val==='function') ? key : (val ?? key); }
-  function toast(message,type='default'){ toaster.textContent=message; toaster.className='toast show '+type; clearTimeout(toaster.timer); toaster.timer=setTimeout(()=>toaster.classList.remove('show'),3000); }
-  function setRagUI(ready){ if (ready){ ragDot.classList.add('ok'); ragText.textContent = (state.lang==='zh-Hant')?'RAG 服務：已連線':'RAG Service: Connected'; } else { ragDot.classList.remove('ok'); ragText.textContent=t('status_rag'); } }
-  function applyLang(lang){
-    state.lang = lang; const dict = i18n[lang] || i18n['zh-Hant'];
-    $$('[data-key]').forEach(el=>{ const key=el.getAttribute('data-key'); let val=dict[key]; if (typeof val==='function') val=key; if (!val) return;
-      if (el.tagName==='INPUT' && el.hasAttribute('placeholder')) el.placeholder=val; else el.textContent=val; });
-    localStorage.setItem('lang', lang); toast(dict.toast_lang_switched(lang==='zh-Hant'), 'success');
-    renderKB(); setRagUI(state.ragReady); $('#app-title').textContent=t('title');
-  }
-  function addBubble(role,text){ const b=document.createElement('div'); b.className='bubble '+(role==='ai'?'ai':'user'); b.textContent=text; chatBox.appendChild(b); chatBox.scrollTop=chatBox.scrollHeight; }
-
-  // ===== 知識庫 =====
-  function loadKnowledge(){ let custom=[]; try{ custom = JSON.parse(localStorage.getItem('customKnowledge')||'[]'); }catch{} custom=custom.map(a=>({type:(a.type||'custom').toLowerCase(),...a})); state.knowledge=[...DEFAULT_KB, ...custom]; }
-  function matchFilter(a){ if (state.filter==='all') return true; return (a.type||'').toLowerCase().includes(state.filter); }
-  function matchSearch(a){ const q=state.search.trim().toLowerCase(); if (!q) return true;
-    return ((a.title_zh||'').toLowerCase().includes(q) || (a.title_en||'').toLowerCase().includes(q) || (a.desc||'').toLowerCase().includes(q) || (a.info_zh||'').toLowerCase().includes(q) || (a.info_en||'').toLowerCase().includes(q)); }
-  function renderKB(){ kbGrid.innerHTML=''; const lang=state.lang; const list=state.knowledge.filter(matchFilter).filter(matchSearch);
-    const frag=document.createDocumentFragment();
-    list.forEach(a=>{
-      const node=kbTpl.content.firstElementChild.cloneNode(true);
-      node.dataset.id=a.id;
-      const img=$('img',node); const title=$('.title',node); const meta=$('.meta',node);
-      const label=(lang==='zh-Hant'? (a.title_zh||a.title_en||'') : (a.title_en||a.title_zh||''));
-      img.loading='lazy'; img.decoding='async';
-      img.src=a.img_url || `https://via.placeholder.com/600x340/4a4a5a/ffffff?text=${encodeURIComponent(label.slice(0,12))}`;
-      img.alt=label || 'asset image';
-      title.textContent=label;
-      meta.textContent=(lang==='zh-Hant' ? (a.info_zh||a.info_en) : (a.info_en||a.info_zh)) || '';
-      frag.appendChild(node);
-    });
-    kbGrid.appendChild(frag);
-  }
-
-  // ===== Gemini 呼叫 =====
-  async function geminiPing(key){
-    const resp = await fetch(`${GEMINI_ENDPOINT}?key=${encodeURIComponent(key)}`,{
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ contents:[{ parts:[{ text:'ping'}] }], generationConfig:{maxOutputTokens:4, temperature:0} })
-    });
-    if (!resp.ok){
-      let msg=`HTTP ${resp.status}`;
-      try{ const j=await resp.json(); if (j?.error?.message) msg += `：${j.error.message}`; }catch{}
-      throw new Error(msg);
-    }
-  }
-
-  async function geminiGenerate(key, userText, contextBlocks, lang){
-    // contextBlocks: 陣列，每筆 {title, info, desc}
-    const ctx = (contextBlocks||[]).map((c,i)=>`[${i+1}] ${c.title}（${c.info}）\n${c.desc||''}`).join('\n\n');
-    const sys = (lang==='zh-Hant')
-      ? `你是文化導覽助理。若提供了【知識庫片段】就優先依片段回答，必要時補充常識，但避免編造。以簡潔分段中文回覆。`
-      : `You are a cultural guide. Prefer answering from the provided [KB snippets]; add general facts if needed but avoid fabrication. Reply concisely in ${lang==='en'?'English':'the user language'}.`;
-    const prompt = (ctx ? ((lang==='zh-Hant')? `【知識庫片段】\n${ctx}\n\n問題：${userText}\n請依片段作答；若片段不足，再補充背景。` :
-                                      `[KB Snippets]\n${ctx}\n\nQuestion: ${userText}\nAnswer using the snippets; add background only if needed.`)
-                          : userText);
-
-    const resp = await fetch(`${GEMINI_ENDPOINT}?key=${encodeURIComponent(key)}`,{
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        systemInstruction:{ parts:[{text: sys}] },
-        contents:[{ role:'user', parts:[{text: prompt}] }],
-        generationConfig:{ temperature:0.3, topP:0.9, maxOutputTokens:512 }
-      })
-    });
-    if (!resp.ok){
-      let msg=`HTTP ${resp.status}`;
-      try{ const j=await resp.json(); if (j?.error?.message) msg += `：${j.error.message}`; }catch{}
-      throw new Error(msg);
-    }
-    const data = await resp.json();
-    const text = data?.candidates?.[0]?.content?.parts?.map(p=>p.text).join('') || '';
-    return text.trim() || (lang==='zh-Hant' ? '（未取得模型回應）' : '(No model output)');
-  }
-
-  // 從知識庫挑一筆最相近（超簡易檢索）
-  function pickKBContext(query){
-    const q=query.toLowerCase();
-    let best=null, score=0;
-    for(const a of state.knowledge){
-      const blob = `${a.title_zh||''} ${a.title_en||''} ${a.info_zh||''} ${a.info_en||''} ${a.desc||''}`.toLowerCase();
-      let s=0;
-      // 極簡打分：關鍵詞重疊
-      q.split(/\s+/).forEach(tok=>{ if (tok && blob.includes(tok)) s++; });
-      if (s>score){ score=s; best=a; }
-    }
-    if (!best || score===0) return [];
-    return [{
-      title: (state.lang==='zh-Hant')? (best.title_zh||best.title_en): (best.title_en||best.title_zh),
-      info: (state.lang==='zh-Hant')? (best.info_zh||best.info_en): (best.info_en||best.info_zh),
-      desc: best.desc||''
-    }];
-  }
-
-  // ===== 事件 =====
-  function bindEvents(){
-    $('#btn-zh').addEventListener('click',()=>applyLang('zh-Hant'));
-    $('#btn-en').addEventListener('click',()=>applyLang('en'));
-
-    // ▶ 這段是新的：按下儲存 → 真的驗證 Key
-    btnSaveAPI.addEventListener('click', async ()=>{
-      const key = inputGemini.value.trim();
-      if (!key){ toast(i18n[state.lang].toast_key_bad, 'error'); return; }
-      try{
-        await geminiPing(key);
-        state.geminiKey = key;
-        state.ragReady = true;
-        localStorage.setItem('geminiKey', key);
-        localStorage.setItem('ragReady', 'true');
-        setRagUI(true);
-        toast(i18n[state.lang].toast_key_ok,'success');
-        addBubble('ai', (state.lang==='zh-Hant')?'服務已啟動。RAG 檢索就緒，請開始提問！':'Service initiated. RAG retrieval is ready.');
-      }catch(err){
-        state.ragReady = false;
-        localStorage.setItem('ragReady','false');
-        setRagUI(false);
-        toast('Gemini 驗證失敗：'+(err.message||err),'error');
+    const i18n = {
+      'zh-Hant': {
+        ui_lang: '介面語言:', title: '文化智遊儀表板', nav_guide: '導覽', nav_knowledge: '知識庫', nav_experience: '體驗', nav_personal: '個人中心',
+        h2_api: 'API 整合服務模組', p_api: '系統服務狀態與金鑰設定', status_rag: 'RAG 服務：尚未連線', status_data: '開放資料：同步中', btn_save: '儲存設定',
+        h2_guide: 'AI 智能導覽', p_guide: '您的隨身文化嚮導', chat_init: '[系統初始化] 檢測到 RAG 核心未啟動。請在上方輸入您的 Gemini Key 以連線文化知識庫。', placeholder_chat: '輸入您的文化問題或導覽需求...', btn_send: '發送',
+        h2_db: '文化知識庫', p_db: '探索全台文化資產 (RAG 資料源)', btn_import: '↓ 匯入新資料', placeholder_search: '搜尋古蹟、文物、歷史事件...',
+        filter_all: '全部', filter_monument: '古蹟', filter_museum: '博物館', filter_intangible: '無形文化',
+        h2_immersive: '沉浸式體驗', p_immersive: '啟動您的時光機', tag_ar: 'AR 實景還原', h4_anping: '安平古堡：熱蘭遮城 1632', tag_vr: 'VR 虛擬展館', h4_taipei: '已消失的台北城牆 (數位重建)',
+        h2_local: '在地即時資訊', p_local: '整合開放資料', map_placeholder: '--- 互動地圖載入區域 ---', bus_route: '[市區公車] 77路', bus_status: '即將抵達：赤崁樓站 (3 分鐘)', event_name: '[節慶活動] 府城文化節', event_status: '進行中：孔廟園區 (距離 1.2km)',
+        h2_personal: '個人化中心', p_personal: '您的文化足跡', card_fav: '我的收藏', card_fav_p: '您已收藏 12 個景點與 3 篇導覽', card_trip: '我的行程', card_trip_p: '您有 1 個即將到來的行程 (台南三日遊)', card_ach: '我的成就', card_ach_p: '已解鎖「府城探索者」徽章',
+        modal_title: '匯入自定義文化資產', modal_label_name: '資產名稱 (必填)', modal_label_location: '地點 / 縣市 (必填)', modal_label_type: '類型 (古蹟/博物館/無形文化...)', modal_label_img: '圖片 URL (選填)', modal_label_desc: '簡要描述 (用於 AI 導覽 RAG)', modal_h4_csv: '或：批次匯入 CSV 資料', btn_ai_summarize: '🤖 AI 自動摘要 (模擬)', btn_cancel: '取消', btn_submit: '單筆匯入並啟用', btn_import_csv: '批次匯入 CSV',
+        toast_lang_switched: (isZh) => `介面已切換為 ${isZh ? '繁體中文' : 'English'}（已儲存）`, toast_key_ok: 'Gemini API Key 儲存並驗證成功！服務核心啟動。', toast_key_bad: 'Gemini API Key 格式錯誤或無效。', toast_need_key: '請先在 API 設定模組中輸入有效的 Gemini Key。', toast_import_error: '請填寫「資產名稱」與「地點」。', toast_import_ok: (name) => `成功匯入資產：「${name}」。已加入 RAG 資料源。`, toast_ai_summarizing: 'AI 摘要處理中...', toast_ai_summarize_ok: '摘要完成！已回填至描述欄位。', toast_import_csv_error: 'CSV 匯入失敗，請檢查檔案和格式 (需包含 title, location 欄位)。', toast_import_csv_ok: (count) => `成功匯入 ${count} 筆資產。已加入 RAG 資料源。`,
+      },
+      en: {
+        ui_lang: 'Language:', title: 'Culture Guide Dashboard', nav_guide: 'Guide', nav_knowledge: 'Knowledge Base', nav_experience: 'Experience', nav_personal: 'Personal Center',
+        h2_api: 'API Integration Module', p_api: 'System Status and Key Settings', status_rag: 'RAG Service: Disconnected', status_data: 'Open Data: Syncing', btn_save: 'Save Settings',
+        h2_guide: 'AI Smart Guide', p_guide: 'Your Personal Culture Companion', chat_init: '[System Init] RAG Core Offline. Please enter your Gemini Key above to connect the Knowledge Base.', placeholder_chat: 'Enter your culture question or guidance request...', btn_send: 'Send',
+        h2_db: "Cultural Knowledge Base", p_db: "Explore Taiwan's Cultural Assets (RAG Source)", btn_import: '↓ Import New Data', placeholder_search: 'Search: Monuments, artifacts, history...',
+        filter_all: 'ALL', filter_monument: 'Monuments', filter_museum: 'Museums', filter_intangible: 'Intangible',
+        h2_immersive: 'Immersive Experience', p_immersive: 'Launch Your Time Machine', tag_ar: 'AR Live Restoration', h4_anping: 'Anping Fort: Zeelandia 1632', tag_vr: 'VR Virtual Exhibition', h4_taipei: 'Lost Taipei City Walls (Digital)',
+        h2_local: 'Local Real-Time Info', p_local: 'Open Data Integration', map_placeholder: '--- Interactive Map Loading Area ---', bus_route: '[TRANSIT] Route 77', bus_status: 'Arriving: Chikan Tower (3 min)', event_name: '[EVENT] Fucheng Culture Fest', event_status: 'Active: Confucius Temple (1.2km)',
+        h2_personal: 'Personal Center', p_personal: 'Your Cultural Footprint', card_fav: 'My Favorites', card_fav_p: '12 assets and 3 tours saved.', card_trip: 'My Trips', card_trip_p: '1 upcoming itinerary (Tainan 3-Day)', card_ach: 'My Achievements', card_ach_p: "Achieved: 'Fucheng Explorer' Badge",
+        modal_title: 'Import Custom Cultural Asset', modal_label_name: 'Asset Name (Required)', modal_label_location: 'Location / City (Required)', modal_label_type: 'Type (Monument/Museum/Intangible...)', modal_label_img: 'Image URL (Optional)', modal_label_desc: 'Brief Description (for RAG)', modal_h4_csv: 'OR: Batch Import CSV Data', btn_ai_summarize: '🤖 AI Auto Summarize (Simulated)', btn_cancel: 'Cancel', btn_submit: 'Import Single Asset', btn_import_csv: 'Import CSV Batch',
+        toast_lang_switched: (isZh) => `Language switched to ${isZh ? '繁體中文' : 'English'} (saved)`, toast_key_ok: 'Gemini API Key validated! Service core started.', toast_key_bad: 'Gemini API Key error or invalid.', toast_need_key: 'Please enter a valid Gemini Key in API settings first.', toast_import_error: 'Please fill Asset Name & Location.', toast_import_ok: (name) => `Imported: "${name}". Added to RAG source.`, toast_ai_summarizing: 'AI summarizing in progress...', toast_ai_summarize_ok: 'Summarization complete! Result filled into description.', toast_import_csv_error: 'CSV import failed. Check file and format (requires title, location columns).', toast_import_csv_ok: (count) => `Successfully imported ${count} assets. Added to RAG source.`,
       }
-    });
+    };
 
-    // 聊天送出：改用 Gemini
-    btnSend.addEventListener('click', handleChatSend);
-    chatInput.addEventListener('keypress', e=>{ if (e.key==='Enter') handleChatSend(); });
+    const state = { lang: localStorage.getItem('lang') || 'zh-Hant', ragReady: localStorage.getItem('ragReady') === 'true', geminiKey: localStorage.getItem('geminiKey') || '', knowledge: [], filter: 'all', search: '' };
 
-    // KB 篩選/搜尋
-    kbSearch?.addEventListener('input', e=>{ state.search=e.target.value; renderKB(); });
-    filterButtons.forEach(btn=>{
-      btn.addEventListener('click', e=>{
-        $$('.filter').forEach(b=>b.classList.remove('active'));
-        e.target.classList.add('active');
-        state.filter = e.target.dataset.filter;
-        renderKB();
+    const DEFAULT_KB = [
+      { id: '1', type: 'monument', title_zh: '赤崁樓', info_zh: '台南市 / 一級古蹟', title_en: 'Chikan Tower', info_en: 'Tainan / Grade 1 Monument', img_url: 'https://via.placeholder.com/640x360/222233/aaaaaa?text=Chikan+Tower', desc: '赤崁樓始建於 1653 年，為荷蘭人所建，歷經清朝重建與日治時期修繕，是台南最具代表性的古蹟之一。' },
+      { id: '2', type: 'museum', title_zh: '西門紅樓', info_zh: '台北市 / 歷史建築', title_en: 'Ximen Red House', info_en: 'Taipei / Historical Building', img_url: 'https://via.placeholder.com/640x360/222233/aaaaaa?text=Red+House', desc: '西門紅樓是一座兩層高的紅磚洋樓，見證了西門町的歷史發展。' },
+      { id: '3', type: 'intangible', title_zh: '媽祖繞境', info_zh: '中台灣 / 無形文化', title_en: 'Mazu Pilgrimage', info_en: 'Central Taiwan / Intangible Heritage', img_url: 'https://via.placeholder.com/640x360/222233/aaaaaa?text=Mazu+Pilgrimage', desc: '中元普渡民俗與宗教文化的代表活動之一，強調對先人敬意與社群連結。' }
+    ];
+
+    const ragDot = $('#rag-dot'); const ragText = $('#rag-text'); const btnSaveAPI = $('#btn-save-api'); const inputGemini = $('#gemini-api');
+    const btnZh = $('#btn-zh'); const btnEn = $('#btn-en');
+    const kbGrid = $('#kb-grid'); const kbTpl = $('#kb-card-tpl'); const kbSearch = $('#kb-search'); const filterButtons = $$('.filter');
+    const chatBox = $('#chat'); const chatInput = $('#chat-input'); const btnSend = $('#btn-send');
+    const localToggle = $('#local-toggle'); const localBody = $('#local-body'); const meToggle = $('#me-toggle'); const meBody = $('#me-body');
+    const modal = $('#import-modal'); const btnImport = $('#btn-import'); const btnCloseModal = $('#btn-close-modal'); const btnCancel = $('#btn-cancel'); const importForm = $('#import-form');
+    const inputName = $('#asset-name'); const inputLoc = $('#asset-location'); const inputType = $('#asset-type'); const inputImgUrl = $('#asset-img-url'); const inputDesc = $('#asset-desc'); const btnAiSummarize = $('#btn-ai-summarize'); const inputFileCsv = $('#asset-csv-file'); const btnImportCsv = $('#btn-import-csv');
+    const toaster = $('#toast');
+
+    function init(){ inputGemini.value = state.geminiKey; setRagUI(state.ragReady); applyLang(state.lang); loadKnowledge(); renderKB(); bindEvents(); if (state.ragReady){ chatBox.innerHTML=''; addBubble('ai', t('chat_init').replace('未啟動','已於上次連線時啟動')); } arInit(); vrGuard(); }
+
+    function t(key){ const lang = state.lang in i18n ? state.lang : 'zh-Hant'; const val = i18n[lang][key]; return (typeof val === 'function') ? key : (val ?? key); }
+
+    function applyLang(lang){ state.lang = lang; const dict = i18n[lang] || i18n['zh-Hant'];
+      $$('[data-key]').forEach(el=>{ const key = el.getAttribute('data-key'); let val = dict[key]; if (typeof val === 'function') { val = key; } if (!val) return; if (el.tagName === 'INPUT' && el.hasAttribute('placeholder')) { el.placeholder = val; } else { el.textContent = val; } });
+      localStorage.setItem('lang', lang); toast(dict.toast_lang_switched(lang === 'zh-Hant'), 'success'); renderKB(); setRagUI(state.ragReady); $('#app-title').textContent = t('title'); }
+
+    function setRagUI(ready){ if (ready){ ragDot.classList.add('ok'); ragText.textContent = (state.lang === 'zh-Hant') ? 'RAG 服務：已連線' : 'RAG Service: Connected'; } else { ragDot.classList.remove('ok'); ragText.textContent = t('status_rag'); } }
+
+    function loadKnowledge(){ let custom = []; try { custom = JSON.parse(localStorage.getItem('customKnowledge') || '[]'); } catch{} custom = custom.map(a=>({ type: (a.type||'custom').toLowerCase(), ...a })); state.knowledge = [...DEFAULT_KB, ...custom]; }
+    function addCustomAsset(asset){ const stored = JSON.parse(localStorage.getItem('customKnowledge') || '[]'); stored.push(asset); localStorage.setItem('customKnowledge', JSON.stringify(stored)); loadKnowledge(); renderKB(); }
+
+    function parseCsv(csvText){
+      const lines = csvText.trim().split('\n').filter(line=>line.trim()!==''); if (lines.length<=1) return null;
+      const headers = lines[0].toLowerCase().split(',');
+      const titleIndex = headers.indexOf('title'); const locIndex = headers.indexOf('location'); const typeIndex = headers.indexOf('type'); const descIndex = headers.indexOf('desc'); const imgIndex = headers.indexOf('img_url');
+      if (titleIndex===-1 || locIndex===-1){ console.error('CSV 缺少必需的標題欄位：title, location'); return null; }
+      const results=[]; for (let i=1;i<lines.length;i++){ const cols = lines[i].split(','); if (cols.length<2) continue; const asset = { id:'custom-csv-'+Date.now()+'-'+i, type:(cols[typeIndex]||'custom').trim().toLowerCase(), title_zh:(cols[titleIndex]||'').trim(), info_zh:(cols[locIndex]||'').trim(), title_en:(cols[titleIndex]||'').trim(), info_en:(cols[locIndex]||'').trim(), desc:(cols[descIndex]||'').trim(), img_url:(cols[imgIndex]||'').trim() }; if (asset.title_zh && asset.info_zh) results.push(asset); }
+      return results;
+    }
+
+    function matchFilter(a){ if (state.filter==='all') return true; return (a.type||'').toLowerCase().includes(state.filter); }
+    function matchSearch(a){ const q = state.search.trim().toLowerCase(); if (!q) return true; return ((a.title_zh||'').toLowerCase().includes(q) || (a.title_en||'').toLowerCase().includes(q) || (a.desc||'').toLowerCase().includes(q) || (a.info_zh||'').toLowerCase().includes(q) || (a.info_en||'').toLowerCase().includes(q)); }
+    function renderKB(){ kbGrid.innerHTML=''; const lang = state.lang; const list = state.knowledge.filter(matchFilter).filter(matchSearch); const frag = document.createDocumentFragment(); list.forEach(a=>{ const node = kbTpl.content.firstElementChild.cloneNode(true); node.dataset.id=a.id; const img=$('img',node); const title=$('.title',node); const meta=$('.meta',node); const label=(lang==='zh-Hant'? (a.title_zh||a.title_en||'') : (a.title_en||a.title_zh||'')); img.loading='lazy'; img.decoding='async'; img.src = a.img_url || `https://via.placeholder.com/600x340/4a4a5a/ffffff?text=${encodeURIComponent(label.slice(0,12))}`; img.alt = label || 'asset image'; title.textContent = label; meta.textContent = (lang==='zh-Hant' ? (a.info_zh||a.info_en) : (a.info_en||a.info_zh)) || ''; frag.appendChild(node); }); kbGrid.appendChild(frag); }
+
+    function addBubble(role,text){ const b=document.createElement('div'); b.className='bubble '+(role==='ai'?'ai':'user'); b.textContent=text; chatBox.appendChild(b); chatBox.scrollTop=chatBox.scrollHeight; }
+
+    function simulateRAG(query){ const isZh = state.lang==='zh-Hant'; const data = state.knowledge; let found=null; const q=query.toLowerCase(); for(const a of data){ const zh = `${a.title_zh||''} ${a.info_zh||''} ${a.desc||''}`.toLowerCase(); const en = `${a.title_en||''} ${a.info_en||''} ${a.desc||''}`.toLowerCase(); if (zh.includes(q) || en.includes(q)) { found=a; break; } }
+      const placeholder=document.createElement('div'); placeholder.className='bubble ai'; placeholder.textContent=isZh?'（RAG 檢索中...）':'(RAG retrieving...)'; chatBox.appendChild(placeholder); chatBox.scrollTop=chatBox.scrollHeight;
+      setTimeout(()=>{ let reply; if (!state.ragReady){ reply = isZh ? '偵測到 RAG 核心尚未連線。請檢查您的 Gemini Key。' : 'RAG core disconnected. Please check your Gemini Key.'; }
+        else if (found){ const title=isZh?(found.title_zh||found.title_en):(found.title_en||found.title_zh); const info=isZh?(found.info_zh||found.info_en):(found.info_en||found.info_zh); const desc=found.desc || (isZh ? '此資產缺乏詳細描述。' : 'This asset lacks detailed description.'); reply = isZh ? `好的，關於「${title}」（${info}），我們的知識庫有以下資訊：\n\n${desc}` : `Yes, I found information on "${title}" (${info}):\n\n${desc}`; }
+        else { reply = isZh ? '知識庫中找不到相關資訊。或許您可以嘗試匯入更多自定義資料？' : "I couldn't find a match in the knowledge base. Would you like to import more custom data?"; }
+        placeholder.textContent=reply; chatBox.scrollTop=chatBox.scrollHeight; }, 800);
+    }
+
+    function handleChatSend(){ const query=chatInput.value.trim(); if (!query) return; addBubble('user', query); chatInput.value=''; simulateRAG(query); }
+
+    // ---- Gemini：真正打 API 來驗證 Key ----
+    async function validateGeminiKey(key) {
+      if (!key || key.length < 10) { throw new Error('EMPTY_OR_SHORT_KEY'); }
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(key)}`;
+      const body = { contents: [ { role: 'user', parts: [{ text: 'ping' }] } ] };
+      let resp;
+      try {
+        resp = await fetch(endpoint, { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(body) });
+      } catch (e) {
+        const isHttps = (location.protocol==='https:' || location.hostname==='localhost' || location.hostname==='127.0.0.1');
+        if (!isHttps) throw new Error('NOT_HTTPS');
+        throw new Error('NETWORK_ERROR');
+      }
+      if (!resp.ok) {
+        let detail=''; try { detail = (await resp.json())?.error?.message || '';} catch {}
+        if (resp.status === 401) throw new Error('INVALID_KEY');
+        if (resp.status === 403) throw new Error('FORBIDDEN');
+        if (resp.status === 429) throw new Error('RATE_LIMIT');
+        throw new Error('API_ERROR:' + (detail || resp.status));
+      }
+      return true;
+    }
+
+    function bindEvents(){
+      $('#btn-zh').addEventListener('click',()=>applyLang('zh-Hant'));
+      $('#btn-en').addEventListener('click',()=>applyLang('en'));
+
+      btnSaveAPI.addEventListener('click', async () => {
+        const key = inputGemini.value.trim();
+        state.geminiKey = key; state.ragReady = false;
+        localStorage.setItem('geminiKey', state.geminiKey);
+        localStorage.setItem('ragReady', String(state.ragReady));
+        setRagUI(false);
+        toast((state.lang==='zh-Hant') ? '正在驗證 Gemini Key，請稍候…' : 'Validating Gemini Key…', 'success');
+        try {
+          await validateGeminiKey(key);
+          state.ragReady = true; localStorage.setItem('ragReady','true'); setRagUI(true);
+          toast(i18n[state.lang].toast_key_ok, 'success');
+          addBubble('ai', (state.lang==='zh-Hant') ? '服務已啟動。RAG 檢索就緒，請開始提問！' : 'Service initiated. RAG retrieval is ready.');
+        } catch (err) {
+          let msgZh = '驗證失敗：未知錯誤。', msgEn='Validation failed: Unknown error.'; const isZh=(state.lang==='zh-Hant');
+          switch(String(err.message)){
+            case 'EMPTY_OR_SHORT_KEY': msgZh='請輸入有效的 Gemini API Key。'; msgEn='Please enter a valid Gemini API Key.'; break;
+            case 'NOT_HTTPS': msgZh='需要在 HTTPS 或 localhost 環境下執行，請改用 https:// 或本機伺服器。'; msgEn='This page must run on HTTPS or localhost.'; break;
+            case 'NETWORK_ERROR': msgZh='網路連線失敗，請檢查網路或瀏覽器封鎖。'; msgEn='Network request failed. Check your connection or browser blocking.'; break;
+            case 'INVALID_KEY': msgZh='Gemini API Key 無效或未授權，請於 Google AI Studio 重新產生。'; msgEn='Invalid/unauthorized Gemini API Key.'; break;
+            case 'FORBIDDEN': msgZh='被拒絕存取：請確認 API Key 的「HTTP 參照來源（referrer）」限制與網域相符，或檢查配額/權限。'; msgEn='Access forbidden: check key referrer restrictions and quotas.'; break;
+            case 'RATE_LIMIT': msgZh='已超出速率或配額限制，稍後再試或調整配額。'; msgEn='Rate limit or quota exceeded.'; break;
+            default:
+              if (String(err.message).startsWith('API_ERROR:')){
+                const detail = String(err.message).replace('API_ERROR:','');
+                msgZh = `API 回應錯誤：${detail}`; msgEn = `API error: ${detail}`;
+              }
+          }
+          state.ragReady=false; localStorage.setItem('ragReady','false'); setRagUI(false);
+          toast(isZh?msgZh:msgEn,'error');
+        }
       });
-    });
-  }
 
-  async function handleChatSend(){
-    const query = chatInput.value.trim();
-    if (!query) return;
-    addBubble('user', query);
-    chatInput.value = '';
-
-    const placeholder = document.createElement('div');
-    placeholder.className='bubble ai';
-    placeholder.textContent = (state.lang==='zh-Hant')?'（AI 生成中…）':'(Generating…)';
-    chatBox.appendChild(placeholder); chatBox.scrollTop=chatBox.scrollHeight;
-
-    if (!state.ragReady || !state.geminiKey){
-      placeholder.textContent = (state.lang==='zh-Hant')
-        ? '偵測到 RAG/模型尚未連線。請先在上方輸入有效的 Gemini Key 並「儲存設定」。'
-        : 'RAG/model is offline. Please enter a valid Gemini Key above and press Save.';
-      toast(i18n[state.lang].toast_need_key, 'error');
-      return;
+      btnSend.addEventListener('click', handleChatSend);
+      chatInput.addEventListener('keypress', e=>{ if (e.key==='Enter') handleChatSend(); });
+      kbSearch.addEventListener('input', e=>{ state.search=e.target.value; renderKB(); });
+      filterButtons.forEach(btn=>{ btn.addEventListener('click', e=>{ $$('.filter').forEach(b=>b.classList.remove('active')); e.target.classList.add('active'); state.filter = e.target.dataset.filter; renderKB(); }); });
+      btnImport.addEventListener('click', ()=> modal.showModal()); [btnCloseModal, btnCancel].forEach(btn=>btn.addEventListener('click', ()=> modal.close()));
+      importForm.addEventListener('submit', handleSingleImport);
+      btnAiSummarize.addEventListener('click', ()=>{ if (!state.ragReady){ toast(i18n[state.lang].toast_need_key, 'error'); return; } const longText=inputDesc.value.trim(); if (longText.length<50){ toast(state.lang==='zh-Hant' ? '請輸入更多文本以供 AI 摘要。' : 'Please input more text for AI to summarize.', 'error'); return; } toast(i18n[state.lang].toast_ai_summarizing, 'success'); setTimeout(()=>{ const isZh=state.lang==='zh-Hant'; const summaryLoc=inputLoc.value.trim() || (isZh ? '該地點' : 'the location'); const summaryType=inputType.value.trim() || (isZh ? '文化資產' : 'cultural asset'); const simulatedSummary = isZh ? `[AI 摘要模擬] 此文物的核心價值已濃縮：它坐落於${summaryLoc}，屬於${summaryType}類型，歷史意義重大，是當地社區的文化焦點。` : `[AI Summary] The core value of this asset is summarized: Located in ${summaryLoc}, this ${summaryType} holds great historical significance and serves as a cultural focal point for the local community.`; inputDesc.value=simulatedSummary; toast(i18n[state.lang].toast_ai_summarize_ok, 'success'); }, 800); });
+      btnImportCsv.addEventListener('click', ()=>{ const file=inputFileCsv.files[0]; if (!file){ toast(state.lang==='zh-Hant' ? '請選擇一個 CSV 檔案。' : 'Please select a CSV file.', 'error'); return; } const reader=new FileReader(); reader.onload=function(e){ const csvText=e.target.result; const newAssets=parseCsv(csvText); if (!newAssets || newAssets.length===0){ toast(i18n[state.lang].toast_import_csv_error, 'error'); return; } const stored=JSON.parse(localStorage.getItem('customKnowledge')||'[]'); stored.push(...newAssets); localStorage.setItem('customKnowledge', JSON.stringify(stored)); loadKnowledge(); renderKB(); toast(i18n[state.lang].toast_import_csv_ok(newAssets.length), 'success'); inputFileCsv.value=null; modal.close(); }; reader.onerror=()=>{ toast(state.lang==='zh-Hant' ? '讀取檔案失敗。' : 'Failed to read file.', 'error'); }; reader.readAsText(file); });
+      localToggle.addEventListener('click', ()=>toggleCollapsible(localBody, localToggle)); meToggle.addEventListener('click', ()=>toggleCollapsible(meBody, meToggle));
     }
 
-    try{
-      const ctx = pickKBContext(query); // 用知識庫當作 RAG 上下文
-      const text = await geminiGenerate(state.geminiKey, query, ctx, state.lang);
-      placeholder.textContent = text;
-    }catch(err){
-      placeholder.textContent = (state.lang==='zh-Hant')
-        ? `呼叫模型失敗：${err.message||err}\n（已退回本地關鍵字檢索）`
-        : `Model call failed: ${err.message||err}\n(Falling back to local KB)`;
-    }
-  }
+    function handleSingleImport(e){ e.preventDefault(); const name=inputName.value.trim(); const loc=inputLoc.value.trim(); if (!name || !loc){ toast(i18n[state.lang].toast_import_error, 'error'); return; } const imgUrl=inputImgUrl.value.trim(); const asset={ id:'custom-'+Date.now(), type:(inputType.value.trim()||'custom').toLowerCase(), title_zh:name, info_zh:loc, title_en:name, info_en:loc, desc:inputDesc.value.trim(), img_url:imgUrl }; addCustomAsset(asset); toast(i18n[state.lang].toast_import_ok(name), 'success'); inputName.value=''; inputLoc.value=''; inputType.value=''; inputDesc.value=''; inputImgUrl.value=''; inputFileCsv.value=null; modal.close(); }
 
-  // 啟動
-  init();
-})();
-</script>
+    function toggleCollapsible(body, header){ const isHidden=body.hidden; body.hidden=!isHidden; header.setAttribute('aria-expanded', isHidden); const caret=$('.caret', header); if (caret) caret.textContent = isHidden ? '▼' : '▲'; }
+    function toast(message, type='default'){ toaster.textContent=message; toaster.className='toast show '+type; clearTimeout(toaster.timer); toaster.timer=setTimeout(()=>{ toaster.classList.remove('show'); }, 3000); }
+
+    function arInit(){ const mv = document.getElementById('mv-anping'); if (!mv) return; mv.addEventListener('load', ()=> toast('3D 模型已載入，可旋轉縮放預覽。','success')); mv.addEventListener('ar-status', (e)=>{ const s=e.detail && e.detail.status; if (s==='session-started') toast('AR 已啟動，請在地面上移動裝置以偵測平面。','success'); if (s==='not-presenting') toast('已退出 AR 模式。','default'); }); mv.addEventListener('ar-tracking',(e)=>{ if (e.detail && e.detail.status==='not-tracking') toast('追蹤不穩，請移至光線充足區域。','error'); }); mv.addEventListener('error', (e)=> toast('AR/3D 錯誤：'+(e.message||'未知'), 'error')); mv.addEventListener('click', ev=>{ const btn=ev.composedPath && ev.composedPath().find(n=>n && n.classList && n.classList.contains('hotspot')); if (btn && btn.dataset.anno) toast(btn.dataset.anno,'success'); }); }
+
+    function vrGuard(){ const vrCard=document.querySelector('.vr-card'); if (!vrCard) return; const wrap=vrCard.querySelector('.vr-wrap'); const isSecure= location.protocol==='https:' || location.hostname==='localhost' || location.hostname==='127.0.0.1'; if (!isSecure){ return vrFallback('需要在 HTTPS 或 localhost 執行（目前為 '+location.protocol+'）。'); } if (!window.AFRAME){ return vrFallback('A-Frame 載入失敗或被阻擋。'); }
+      try { const scene=vrCard.querySelector('a-scene'); if (!scene) throw new Error('找不到 a-scene'); scene.addEventListener('error', e=> vrFallback('渲染器錯誤')); } catch(err){ vrFallback(err.message||String(err)); }
+      function vrFallback(reason){ if (!wrap) return; wrap.innerHTML = `<div style="display:grid;place-items:center;height:100%;padding:1rem;text-align:center">
+          <img src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/sechelt.jpg" alt="360 靜態預覽" style="max-width:100%;max-height:100%;object-fit:cover;border-radius:12px"/>
+          <p style="color:#9ab;line-height:1.4;margin:.6rem 0 0">VR 模組未啟動：${reason}<br/>請改用 HTTPS 環境、或以本機伺服器開啟。</p>
+        </div>`; toast('VR 虛擬展館未啟動：'+reason,'error'); }
+    }
+
+    init();
+  })();
+  </script>
+</body>
+</html>
